@@ -2,7 +2,7 @@
    マップ機能（C 生活圏・おでかけ）
    生活圏モード：map → area → areamap → place → facility
    旅行モード  ：map → trip → tripres → tripplan
-   計算は js/ev-route.js、場所検索と経路は js/geo.js、施設は data/facilities.js
+   計算は ev-route.js、場所検索と経路は geo.js、施設は facilities.js
    ========================================================= */
 
 const FREQ = {
@@ -85,7 +85,7 @@ function fit(m, pts) {
 }
 
 /* ---------- 共通の部品 ---------- */
-const demoNote = () => hasDemo() ? `<p class="info"><span class="flag">デモ</span> 施設は動作確認用の架空データです。実データは data/facilities.js に登録してください。</p>` : "";
+const demoNote = () => hasDemo() ? `<p class="info"><span class="flag">デモ</span> 施設は動作確認用の架空データです。実データは facilities.js に登録してください。</p>` : "";
 const facKindIcon = (f) => `<div class="pin ${f.type}" aria-hidden="true" style="flex-shrink:0">${f.type === "quick" ? "急" : f.type === "normal" ? "普" : ""}</div>`;
 function facRow(f, sub, rec) {
   return `<button type="button" class="lrow${rec ? " rec" : ""}" data-act="openFac:${esc(f.id)}">${facKindIcon(f)}
@@ -613,5 +613,4 @@ function tileC() {
 
 screens.total.update = () => { ensureArea(); ensureTrip(); };
 
-/* ---------- 起動 ---------- */
-render(false);
+/* 起動は lifestyle.js の最後で行う */

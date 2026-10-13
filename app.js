@@ -106,7 +106,7 @@ screens.home = () => {
   return header("EV Life Simulator",null,"ホーム") + `<main class="main">
     <div class="hero"><span class="area">UTSUNOMIYA × HAGA</span><h1>EVのある暮らしを、<br>自分の生活で試算する</h1><p>3つの項目から、コスト・行ける範囲・暮らしの変化がわかります。どこから始めても大丈夫です。</p></div>
     <div class="prog"><div class="row"><strong>入力状況</strong><span class="num" style="color:var(--sub)">${done} / 3 完了</span></div><div class="bar"><i style="width:${done/3*100}%"></i></div></div>
-    ${card("A","ライフスタイル","充電環境・通勤・休日の使い方","lifestyle",'<span class="pill soon">準備中</span>')}
+    ${card("A","ライフスタイル","場面を選ぶと、あなたに合う使い方を提案","lifestyle", S.ls&&S.ls.seen?'<span class="pill done">入力済み</span>':'<span class="pill todo">未入力</span>')}
     ${card("B","車両とコスト","ガソリン新車とEV新車の総額を比較","gas", doneB()?'<span class="pill done">入力済み</span>':'<span class="pill todo">未入力</span>')}
     ${card("C","生活圏・おでかけ","よく行く場所の充電施設と、旅行の充電計画","map", (S.area&&S.area.status==="done")||(S.tripRes&&S.tripRes.status==="done")?'<span class="pill done">入力済み</span>':'<span class="pill todo">未入力</span>')}
     <p class="hint">試算条件：ガソリン ${n("pGas")}円/L・自宅の電気 ${n("pHome")}円/kWh（変更は結果画面の詳細設定から）</p>
@@ -143,7 +143,7 @@ screens.ev = () => {
     <section class="sec"><h2>充電の環境</h2>
       <label class="chk"><input type="checkbox" data-k="homeCharge"${S.homeCharge?" checked":""}>自宅に充電器を設置できる</label>
       <div id="shareWrap"${S.homeCharge?"":" hidden"}>${slider("homeShare","自宅で充電する割合",0,100,5,v=>v+"%","すべて外で","すべて自宅","shareOut")}</div>
-      <p class="hint">ライフスタイル（A）の入力ができたら、ここは自動で引き継ぐ予定です</p>
+      <p class="hint">ライフスタイル（A）の「自宅で充電できますか」と同じ設定です</p>
     </section>
   </main>` + footer(btn("cost","コストを比較する", !S.evKey));
 };
@@ -221,7 +221,7 @@ screens.total = () => {
     <div style="display:flex;flex-direction:column;gap:4px"><span class="hint">あなたが選んだEV</span><h2 style="font-size:24px">${E?E.name:"未選択"}</h2></div>
     ${tileB}
     ${tileC()}
-    ${stubTile("A","暮らしの変化","effect","lifestyle")}
+    ${tileA()}
     <button class="btn2" data-go="share" style="border-style:dashed;border-color:var(--ev);color:var(--ev);font-weight:700">家族に結果を共有する（準備中）</button>
   </main>` + footer(btn("rental","このEVを1日試してみる"), btn2("home","ホームに戻る"));
 };
@@ -229,8 +229,6 @@ screens.total = () => {
 const stub = (title,back,tag,heading,items,next) => () => header(title,back,tag) + `<main class="main">
   <div class="stub"><span class="pill soon" style="align-self:flex-start">準備中</span><h2>${heading}</h2><ul>${items.map(i=>`<li>${i}</li>`).join("")}</ul></div>
 </main>` + footer(...next);
-screens.lifestyle = stub("ライフスタイル","home","入力 A","ライフスタイルの入力",["自宅の充電環境（戸建て／集合住宅）","通勤・送迎の距離と頻度","休日の使い方・乗る人数","重視したいこと"],[btn("effect","次へ：導入効果を見る")]);
-screens.effect = stub("導入効果","lifestyle","結果 A","暮らしの変化（質的な効果）",["給油の手間がなくなる回数","通勤・休日の使い方に合わせた変化","静かさ・乗り心地（試乗への導線）","災害時の給電"],[btn("total","トータル結果へ"),btn2("home","ホームで他の項目を入力")]);
 screens.rental = () => { const E=evCar(); return header("レンタカーで試す","total","次の一歩") + `<main class="main">
   <div class="hero"><h1>数字の次は、<br>乗り心地を確かめる</h1><p>静かさや加速は、乗ってみるのが一番です。</p></div>
   <div class="stub"><span class="pill soon" style="align-self:flex-start">レンタカーアプリと連携予定</span><h2>${E?E.name:"選んだEV"} を予約</h2><ul><li>診断結果（車種・よく行く場所）を引き継いで予約画面を開く</li><li>貸出場所：販売店（LRT停留場の近く）</li><li>よく行く場所をもとにした試乗コースの提案</li></ul></div>
