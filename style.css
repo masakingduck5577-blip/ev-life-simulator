@@ -1,18 +1,18 @@
 :root{
   --bg:#EEF2F4;--panel:#FFFFFF;--ink:#17232B;--sub:#52606B;--line:#D3DBE1;
-  --ev:#1B5E7A;--ev-t:#E3EEF2;--gas:#A8490C;--gas-t:#FAEDE3;--warn:#8A5A00;--warn-t:#FFF4D6;--on-ev:#FFFFFF;
+  --ev:#1B5E7A;--ev-t:#E3EEF2;--evl:#9CC3D3;--gas:#A8490C;--gas-t:#FAEDE3;--warn:#8A5A00;--warn-t:#FFF4D6;--on-ev:#FFFFFF;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#10181D;--panel:#172229;--ink:#E6ECEF;--sub:#9FB0BB;--line:#2A3842;
-    --ev:#6BB8D6;--ev-t:#173541;--gas:#E6955A;--gas-t:#3A2618;--warn:#F2C766;--warn-t:#3A2F12;--on-ev:#0E1A20;
+    --ev:#6BB8D6;--ev-t:#173541;--evl:#2C5A6B;--gas:#E6955A;--gas-t:#3A2618;--warn:#F2C766;--warn-t:#3A2F12;--on-ev:#0E1A20;
   }
 }
 :root[data-theme="dark"]{
   --bg:#10181D;--panel:#172229;--ink:#E6ECEF;--sub:#9FB0BB;--line:#2A3842;
-  --ev:#6BB8D6;--ev-t:#173541;--gas:#E6955A;--gas-t:#3A2618;--warn:#F2C766;--warn-t:#3A2F12;--on-ev:#0E1A20;
+  --ev:#6BB8D6;--ev-t:#173541;--evl:#2C5A6B;--gas:#E6955A;--gas-t:#3A2618;--warn:#F2C766;--warn-t:#3A2F12;--on-ev:#0E1A20;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 64px)}
@@ -242,3 +242,35 @@ details .body{display:flex;flex-direction:column;gap:10px;padding-bottom:14px}
 .lsstat span{font-size:13px;color:var(--ev);font-weight:700}
 .lsstat b{font-family:'Zen Kaku Gothic New',sans-serif;font-size:24px}
 .lsstat small{font-size:12px;color:var(--sub);line-height:1.6}
+
+/* ===== cost comparison (2 pillars) ===== */
+.cond{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:var(--bg);font-size:12px;color:var(--sub);line-height:1.6}
+.cond b{color:var(--ink);font-size:13px}
+.pillar{display:flex;flex-direction:column;gap:14px;padding:18px;border:2px solid var(--ev);border-radius:18px;background:var(--panel)}
+.pillar .kick{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--ev)}
+.pillar .kick i{font-style:normal;width:24px;height:24px;border-radius:50%;background:var(--ev);color:var(--on-ev);display:flex;align-items:center;justify-content:center;font-size:13px}
+.pillar .ttl{font-size:23px;line-height:1.35;margin:0}
+.pillar .ttl em{font-style:normal;color:var(--ev);font-size:34px}
+.bars{display:flex;flex-direction:column;gap:10px;padding-top:14px}
+.br{display:grid;grid-template-columns:78px minmax(0,1fr) 80px;gap:8px;align-items:center;font-size:12px}
+.br .lb{color:var(--sub)}
+.br .tr{height:22px;position:relative}
+.br .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.br .v{font-weight:700;font-size:14px;text-align:right;white-space:nowrap}
+.br.big .v{font-size:17px;color:var(--ev)}
+.hatch{position:absolute;top:0;bottom:0;border-radius:0 4px 4px 0;background:repeating-linear-gradient(135deg,var(--panel) 0 4px,var(--evl) 4px 8px);border:1.5px dashed var(--ev);box-sizing:border-box}
+.subtag{position:absolute;top:-18px;font-size:11px;font-weight:700;color:var(--ev);white-space:nowrap}
+.pillar .gap{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:var(--bg);font-size:12px}
+.pillar .gap b{font-size:14px}
+.pillar .gap.good{background:var(--ev-t);color:var(--ev)}
+.duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.duo .st{display:flex;flex-direction:column;gap:2px;padding:12px;border-radius:12px}
+.duo .st.g{background:var(--gas-t)} .duo .st.e{background:var(--ev-t)}
+.duo .st span{font-size:11px;font-weight:700}
+.duo .st.g span{color:var(--gas)} .duo .st.e span{color:var(--ev)}
+.duo .st b{font-size:22px}
+.times{text-align:center;font-size:13px;font-weight:700;color:var(--ev)}
+.p3{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:18px;background:var(--bg)}
+.p3 .k{font-size:13px;font-weight:700;color:var(--sub)}
+.p3 .big{font-family:'Zen Kaku Gothic New',sans-serif;font-size:20px;font-weight:700;line-height:1.45}
+.p3 .big em{font-style:normal;color:var(--ev)}

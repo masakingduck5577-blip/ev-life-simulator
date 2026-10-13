@@ -22,3 +22,6 @@ const GASES = {
 const DEP = { gas:{hi:0.12, mid:0.15, lo:0.18}, ev:{hi:0.15, mid:0.19, lo:0.23} }; // 年率の価値減少（仮）
 const SCEN_LABEL = {hi:"高め", mid:"中間", lo:"低め"};
 const SUBSIDY_HOLD_YEARS = 4;
+
+/* 補助金の出典の表記（年度・時点を更新したらここを書き換える） */
+const SUBSIDY_NOTE = "国のCEV補助金（2026年度・[〇]月時点）。予算がなくなると受付終了。自治体の補助は別途確認。";
