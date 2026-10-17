@@ -10,6 +10,8 @@
 <!-- 地図：Leaflet（地図データは OpenStreetMap） -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<!-- 相談メモのQRコード（読み込めないときはQRなしで動く） -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -25,6 +27,7 @@
 <!-- 画面（この順番で読み込む。起動は lifestyle.js の最後） -->
 <script src="app.js"></script>
 <script src="maps.js"></script>
+<script src="memo.js"></script>
 <script src="lifestyle.js"></script>
 </body>
 </html>

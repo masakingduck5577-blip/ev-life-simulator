@@ -11,14 +11,17 @@ const EVS = {
   "n-van-e":  {name:"N-VAN e:", cat:"軽商用EV", price:2600000, sub:0, wh:126, kwh:29.6, tax:5000, wt:0, qkw:50, acKw:6, ok:false},
   "custom":   {name:"その他のEV", cat:"スペックを入力", custom:true}
 };
+/* 比べる相手の車。type は "gas"（ガソリン車）/ "hv"（ハイブリッド車）。価格・燃費は仮の値 */
 const GASES = {
-  "n-one": {name:"N-ONE", cat:"軽乗用", price:1800000, fe:23, tax:10800, wt:3300},
-  "n-box": {name:"N-BOX", cat:"軽乗用", price:1800000, fe:21, tax:10800, wt:3300},
-  "n-van": {name:"N-VAN", cat:"軽商用", price:1500000, fe:18, tax:5000, wt:3300},
-  "fit":   {name:"フィット e:HEV", cat:"コンパクト", price:2300000, fe:27, tax:30500, wt:7500},
-  "zrv":   {name:"ZR-V e:HEV", cat:"SUV", price:3600000, fe:22, tax:36000, wt:12300},
-  "custom":{name:"その他のガソリン車", cat:"スペックを入力", custom:true}
+  "n-one": {name:"N-ONE", cat:"軽乗用", type:"gas", price:1800000, fe:23, tax:10800, wt:3300},
+  "n-box": {name:"N-BOX", cat:"軽乗用", type:"gas", price:1800000, fe:21, tax:10800, wt:3300},
+  "n-van": {name:"N-VAN", cat:"軽商用", type:"gas", price:1500000, fe:18, tax:5000, wt:3300},
+  "fit":   {name:"フィット e:HEV", cat:"コンパクト", type:"hv", price:2300000, fe:27, tax:30500, wt:7500},
+  "zrv":   {name:"ZR-V e:HEV", cat:"SUV", type:"hv", price:3600000, fe:22, tax:36000, wt:12300},
+  "custom":{name:"その他の車", cat:"スペックを入力", custom:true}
 };
+const RIVAL_LABEL = {gas:"ガソリン車", hv:"ハイブリッド車（HV）"};
+const RIVAL_SHORT = {gas:"ガソリン車", hv:"HV"};
 const DEP = { gas:{hi:0.12, mid:0.15, lo:0.18}, ev:{hi:0.15, mid:0.19, lo:0.23} }; // 年率の価値減少（仮）
 const SCEN_LABEL = {hi:"高め", mid:"中間", lo:"低め"};
 const SUBSIDY_HOLD_YEARS = 4;
