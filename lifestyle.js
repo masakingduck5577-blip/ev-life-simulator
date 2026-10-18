@@ -111,7 +111,7 @@ function lsMetric(card) {
 
 const lsCtaTarget = (to) => ({
   rental: "rental", trip: "trip",
-  cost: S.gasKey && S.evKey ? "cost" : "gas",
+  cost: S.gasKey && S.evKey ? "cost" : "ev",
   area: S.home ? "areamap" : "area",
 }[to] || "home");
 

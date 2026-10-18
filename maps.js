@@ -422,7 +422,7 @@ screens.areamap.update = () => {
   const pts = [[S.home.lat, S.home.lng]];
   const A = S.area?.status === "done" ? S.area.data : null;
   if (A) {
-    A.targets.forEach((t) => L.polyline(t.route.coords, { color: "#1B5E7A", weight: 4, opacity: 0.6, dashArray: t.route.approx ? "6 6" : null }).addTo(m));
+    A.targets.forEach((t) => L.polyline(t.route.coords, { color: "#E0352F", weight: 4, opacity: 0.6, dashArray: t.route.approx ? "6 6" : null }).addTo(m));
     const facs = uniqById([...A.homeNear, ...A.targets.flatMap((t) => [...t.along, ...t.near, ...t.merit])]).filter(showLayer);
     addFacPins(m, facs);
   }
@@ -453,7 +453,7 @@ screens.place = () => {
 screens.place.update = () => {
   const t = S.area?.data?.targets.find((x) => x.key === S.selPlace); if (!t) { ensureArea(); return; }
   const m = mkMap("map-place"); if (!m) return;
-  L.polyline(t.route.coords, { color: "#1B5E7A", weight: 5, opacity: 0.75, dashArray: t.route.approx ? "6 6" : null }).addTo(m);
+  L.polyline(t.route.coords, { color: "#E0352F", weight: 5, opacity: 0.75, dashArray: t.route.approx ? "6 6" : null }).addTo(m);
   addFacPins(m, uniqById([...t.along, ...t.near, ...t.merit]));
   addPin(m, [S.home.lat, S.home.lng], "home", "家", "自宅");
   addPin(m, [t.lat, t.lng], t.kind === "work" ? "work" : "place", t.kind === "work" ? "職" : t.no, t.label);
@@ -472,7 +472,7 @@ screens.facility = () => {
     <div class="badges" style="font-size:12px">${isHC(f) ? '<span class="bdg" style="background:#C8102E;color:#fff">Honda Charge</span>' : f.network ? `<span class="bdg mute" style="background:var(--bg)">${esc(f.network)}</span>` : ""}<span class="bdg ok" style="background:${f.type === "quick" ? "#24323D" : f.type === "normal" ? "#5B6A76" : "#2E6B45"};color:#fff">${FTYPE[f.type]}</span>${f.highway ? '<span class="bdg ng">高速道路のSA/PA</span>' : ""}${f.demo ? '<span class="flag">デモ</span>' : ""}</div>
     ${isHC(f) ? '<div class="info">Honda Charge は、専用アプリで充電・支払いをします。N-ONE e: などは差すだけで充電が始まります（プラグ＆チャージ）。料金・空き状況はアプリで確認してください。</div>' : ""}
     <dl>${item("出力", f.kw ? `${f.kw}kW` : "")}${item("口数", f.ports ? `${f.ports}口` : "")}${item("料金", f.priceText || (f.price != null ? `${f.price}円/kWh換算` : ""))}${item("利用できる時間", f.hours)}</dl>
-    ${f.merit ? `<div class="info" style="background:#E3EDE6;color:#17232B"><div style="font-size:12px;font-weight:700;color:#2E6B45">EVで得すること</div>${esc(f.merit)}</div>` : ""}
+    ${f.merit ? `<div class="info" style="background:var(--ok-t);color:var(--ink)"><div style="font-size:12px;font-weight:700;color:var(--ok)">EVで得すること</div>${esc(f.merit)}</div>` : ""}
     ${f.note ? `<p style="margin:0;font-size:14px">${esc(f.note)}</p>` : ""}
     <p class="hint">${f.source === "osm" ? `施設データ：OpenStreetMap（© OpenStreetMap contributors, ODbL）・${esc(f.updatedAt || "")}に自動取得。` : `施設データ：チーム独自調査（確認日 ${esc(f.updatedAt || "未記入")}）。`}最新の情報は施設にご確認ください。${f.source === "osm" ? ` <a href="https://www.openstreetmap.org/${{ n: "node", w: "way", r: "relation" }[f.id.charAt(4)] || "node"}/${esc(f.id.slice(5))}" target="_blank" rel="noopener">間違いを直す</a>` : ""}</p>
   </main>` + `<footer class="ft"><button class="btn2" data-act="back">戻る</button></footer>`;
@@ -577,7 +577,7 @@ screens.tripres.update = () => {
   addPin(m, [S.home.lat, S.home.lng], "home", "発", "自宅");
   addPin(m, [T.dest.lat, T.dest.lng], "place", "着", T.dest.label);
   if (!R) { fit(m, [[S.home.lat, S.home.lng], [T.dest.lat, T.dest.lng]]); return; }
-  L.polyline(R.route.coords, { color: "#1B5E7A", weight: 5, opacity: 0.8, dashArray: R.route.approx ? "6 6" : null }).addTo(m);
+  L.polyline(R.route.coords, { color: "#E0352F", weight: 5, opacity: 0.8, dashArray: R.route.approx ? "6 6" : null }).addTo(m);
   const rec = new Set(R.plan.outbound.stops.map((s) => s.id));
   addFacPins(m, uniqById([...R.along.filter((f) => !rec.has(f.id)), ...R.plan.destChargers, ...R.merit]));
   R.plan.outbound.stops.forEach((s, i) => addPin(m, [s.lat, s.lng], "stop", i + 1, `推奨 ${i + 1}：${s.name}`, () => ACT.openFac(s.id)));
@@ -596,7 +596,7 @@ screens.tripplan = () => {
   const step = (icon, title, sub, soc) => `<div class="st">${icon}<div style="display:flex;flex-direction:column"><b>${title}</b>${sub ? `<span>${sub}</span>` : ""}</div><span class="soc num">${soc}</span></div>`;
   const leg = (m, extra) => `<div class="lg">${km1(m)}km${extra ? `・${extra}` : ""}</div>`;
   const rows = [];
-  rows.push(step(ic("#1B5E7A", "家"), "自宅を出発", T.startSoc === 100 ? "前の晩に自宅で満充電" : "", `${T.startSoc}%`));
+  rows.push(step(ic("#E0352F", "家"), "自宅を出発", T.startSoc === 100 ? "前の晩に自宅で満充電" : "", `${T.startSoc}%`));
   let prev = 0;
   O.stops.forEach((s, i) => {
     rows.push(leg(s.alongM - prev));
@@ -619,7 +619,7 @@ screens.tripplan = () => {
       p2 = s.alongM;
     });
     rows.push(leg(I.trace.at(-1).alongM - p2, "帰り"));
-    rows.push(step(ic("#1B5E7A", "家"), "自宅に到着", "", pct(I.arriveSoc)));
+    rows.push(step(ic("#E0352F", "家"), "自宅に到着", "", pct(I.arriveSoc)));
   } else {
     rows.push(`<p class="warnbox"><strong>帰りの充電先が見つかりません：</strong>目的地での充電を入れて試してください。</p>`);
   }

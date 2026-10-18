@@ -128,22 +128,14 @@ screens.home = () => header("EV Life Simulator",null,"ホーム") + `<main class
     <div class="hero"><div class="herorow" aria-hidden="true">${pic("house",72)}${pic("plug",56)}${pic("car",96)}</div>
       <h1>EVに買い替えたら、<br>お金はどう変わる？</h1>
       <p>今の車とEVを比べて、<b>補助金</b>と<b>燃料代</b>でいくら変わるかを計算します。</p></div>
-    <button class="startcard" data-go="gas"><span class="sc-tx"><span class="k">約3分</span><span class="t">シミュレーションを始める</span><span class="sc-chips"><span>${pic("tag",22)}補助金</span><span>${pic("fuel",22)}燃料代</span></span></span><span class="sc-pic">${pic("yen",76)}</span></button>
+    <button class="startcard" data-go="ev"><span class="sc-tx"><span class="k">約3分</span><span class="t">シミュレーションを始める</span><span class="sc-chips"><span>${pic("tag",22)}補助金</span><span>${pic("fuel",22)}燃料代</span></span></span><span class="sc-pic">${pic("yen",76)}</span></button>
   </main>`;
 
 screens.gas = () => {
-  const rt = S.rivalType;
-  const cards = Object.entries(GASES).filter(([k,d]) => !d.custom && d.type===rt).map(([k,d]) => `<label class="carc gas"><input type="radio" name="gasKey" data-k="gasKey" value="${k}"${S.gasKey===k?" checked":""}>
-    <span class="cpic">${carPic(d,56)}</span><span class="b"><span class="nm">${d.name}</span>${feel(d)}</span></label>`).join("");
+  const G = GASES[S.gasKey], E = EVS[S.evKey];
   const presets = [5000, 8000, 10000, 15000];
-  return header("比べる車と走る距離","home","入力 1/2") + `<main class="main">
-    <section class="sec"><h2>EVと迷っている車は？</h2>
-      <div class="seg segpic" role="radiogroup" aria-label="比べる相手">
-        <label><input type="radio" name="rivalType" data-k="rivalType" value="gas"${rt==="gas"?" checked":""}>${pic("fuel",28)}ガソリン車</label>
-        <label><input type="radio" name="rivalType" data-k="rivalType" value="hv"${rt==="hv"?" checked":""}><span class="duopic">${pic("fuel",24)}${pic("battery",24)}</span>ハイブリッド車</label>
-      </div>
-      <div class="cars" role="radiogroup" aria-label="比べる車">${cards}</div>
-    </section>
+  return header("使い方を入れる","ev","入力 2/2") + `<main class="main">
+    ${E && G ? `<div class="vsrow">${carPic(E,48)}<span class="vs-t"><b>${E.name}</b><span>と、同じクラスのガソリン車（${G.name}）を比べます</span></span>${carPic(G,40)}</div>` : ""}
     <section class="sec"><h2>${pic("road",28)} 1年に走る距離</h2>
       <div class="kmrow"><input type="number" inputmode="numeric" data-k="annualKm" value="${S.annualKm}" step="500" min="0" aria-label="1年に走る距離（km）"><span>km / 年</span></div>
       <div class="chips">${presets.map(v=>`<button type="button" class="chip" aria-pressed="${+S.annualKm===v}" data-act="setKm:${v}">${v.toLocaleString("ja-JP")}km</button>`).join("")}</div>
@@ -151,14 +143,13 @@ screens.gas = () => {
     </section>
     <section class="sec"><h2>${pic("fuel",28)} 燃費とガソリン代</h2>
       <div class="row2">
-        <label class="f">燃費（km/L）<input type="number" inputmode="decimal" data-k="gFe" value="${S.gFe!==""?S.gFe:(GASES[S.gasKey]?.fe??"")}" step="0.1" min="0" placeholder="車を選ぶと入ります"></label>
+        <label class="f">ガソリン車の燃費（km/L）<input type="number" inputmode="decimal" data-k="gFe" value="${S.gFe!==""?S.gFe:(G?.fe??"")}" step="0.1" min="0"></label>
         <label class="f">ガソリン代（円/L）<input type="number" inputmode="numeric" data-k="pGas" value="${S.pGas}" step="1" min="0"></label>
       </div>
-      <p class="hint" style="margin:0">燃費は選んだ車のカタログ値が入ります。実際の燃費はカタログの約85%として計算します</p>
+      <p class="hint" style="margin:0">燃費は同じクラスの新車のカタログ値（仮）です。今の車の燃費に変えてもOK。実際はカタログの約85%として計算します</p>
     </section>
-  </main>` + footer(btn("ev","次へ：EVを選ぶ", !S.gasKey));
+  </main>` + footer(btn("cost","結果を見る", !S.evKey));
 };
-
 screens.gas.update = () => document.querySelectorAll('[data-act^="setKm:"]').forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.act.split(":")[1] === +S.annualKm)));
 
 screens.ev = () => {
@@ -166,15 +157,15 @@ screens.ev = () => {
   const cards = Object.entries(EVS).filter(([k,d]) => !d.custom).map(([k,d]) => `<label class="carc"><input type="radio" name="evKey" data-k="evKey" value="${k}"${S.evKey===k?" checked":""}>
     <span class="cpic">${carPic(d,56)}<span class="plugbadge">${pic("plug",22)}</span></span><span class="b"><span class="nm">${d.name}</span>${feel(d)}</span></label>`).join("");
   const custom = "";
-  return header("気になるEV","gas","入力 2/2") + `<main class="main">
-    ${G?`<div class="compare"><div><div class="k">比べる${rivalLong()}</div><div class="n">${G.name}</div></div><button class="lk" data-go="gas" style="margin:0">変更</button></div>`:""}
+  return header("気になるEV","home","入力 1/2") + `<main class="main">
     <section class="sec"><h2>EVを選ぶ</h2><div class="cars" role="radiogroup" aria-label="EV新車">${cards}</div>${custom}</section>
-  </main>` + footer(btn("cost","コストを比較する", !S.evKey));
+  </main>` + footer(btn("gas","次へ：使い方を入れる", !S.evKey));
 };
 
 screens.cost = () => {
   S.seenCost = true;
-  return header("コスト比較","ev","結果") + `<main class="main" style="gap:16px">
+  return header("コスト比較","gas","結果") + `<main class="main" style="gap:16px">
+    <section class="sumtop" id="sumtop" aria-live="polite"></section>
     <div class="cond" id="cond"></div>
     <div class="pair"><section class="pillar" id="p1" aria-labelledby="p1t"></section>
     <section class="pillar" id="p2" aria-labelledby="p2t"></section></div>
@@ -243,6 +234,20 @@ screens.cost.update = () => {
   document.getElementById("cond").innerHTML = `<div><b>${r.E.name} と ${r.G.name}（${rv}）</b><br>年${km.toLocaleString("ja-JP")}km・${r.N}年・${S.homeCharge?`自宅充電${share}%`:"自宅充電なし"}${drTxt}</div><button class="lk" data-go="gas" style="margin:0;white-space:nowrap">条件を変える</button>`;
   document.getElementById("lgG").textContent = `${r.G.name}（${rv}）`;
   document.getElementById("thG").textContent = rv;
+
+  /* 結論（一番上） */
+  const runDiff = r.gAnnual - r.eAnnual;
+  const crossBig = r.dInit<=0 && r.dAnnual>=0 ? "買った時から" : (r.crossT!==null && r.crossT<=30 ? `約${r.crossT.toFixed(1)}年` : "逆転しない");
+  document.getElementById("sumtop").innerHTML = `<span class="st-k">${pic("coin",22)} ${r.N}年乗ったときの結果</span>
+    ${r.diff < 0
+      ? `<div class="st-big">EVのほうが<br><em class="num">${man(-r.diff)}</em> おトク</div>`
+      : `<div class="st-big bad">${rv}のほうが<br><em class="num">${man(r.diff)}</em> 安い</div>`}
+    <div class="st-grid">
+      <div><span>${pic("tag",20)} 補助金</span><b class="num">${r.E.sub>0?`−${man0(r.E.sub)}`:"―"}</b></div>
+      <div><span>${pic("plug",20)} 維持費/年</span><b class="num">${runDiff>=0?"−":"+"}${man(Math.abs(runDiff))}</b></div>
+      <div><span>${pic("hourglass",20)} 元が取れる</span><b class="num">${crossBig}</b></div>
+    </div>
+`;
 
   /* ① 買うとき：補助金 */
   const sub = r.E.sub || 0, eList = r.ePrice, eReal = r.ePrice - sub, gP = r.gPrice;
@@ -357,7 +362,7 @@ screens.share = () => header("結果を共有","memo","共有") + `<main class="
    ========================================================= */
 function drawChart(r){
   const svg = document.getElementById("chart"); if(!svg) return;
-  const W=520,H=260,L=56,R=86,T=16,B=34, N=r.N;
+  const W=520,H=260,L=56,R=96,T=24,B=34, N=r.N;
   const cs = getComputedStyle(document.documentElement), c = k => cs.getPropertyValue(k).trim();
   const g=[],e=[]; for(let i=0;i<=N;i++){ g.push(r.gInit+r.gAnnual*i); e.push(r.eInit+r.eAnnual*i); }
   const fg=g[N]-r.gRes, fe=e[N]-r.eRes;
@@ -368,9 +373,19 @@ function drawChart(r){
   const ls=N>8?2:1; for(let i=0;i<=N;i+=ls) s+=`<text x="${x(i)}" y="${H-B+18}" font-size="11" fill="${c("--sub")}" text-anchor="middle">${i?i+"年":"購入時"}</text>`;
   const p=a=>a.map((v,i)=>`${i?"L":"M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
   s+=`<path d="${p(g)}" fill="none" stroke="${c("--gas")}" stroke-width="2.5" stroke-dasharray="7 5"/><path d="${p(e)}" fill="none" stroke="${c("--ev")}" stroke-width="3.5"/>`;
-  [[g[N],fg,"--gas"],[e[N],fe,"--ev"]].forEach(([a,b,k])=>{ s+=`<line x1="${x(N)}" y1="${y(a)}" x2="${x(N)+24}" y2="${y(b)}" stroke="${c(k)}" stroke-width="1.5" stroke-dasharray="2 4"/><circle cx="${x(N)+24}" cy="${y(b)}" r="4" fill="${c(k)}"/><text x="${x(N)+31}" y="${y(b)+4}" font-size="11" fill="${c(k)}">${man(b)}</text>`; });
+  // 最終年の総額（残価を引いた点）。2つの数字が近いときは、文字が重ならないよう上下にずらす
+  const ends = [{a:g[N], b:fg, k:"--gas", t:"ガソリン"}, {a:e[N], b:fe, k:"--ev", t:"EV"}].map(o => ({...o, ty:y(o.b)}));
+  const GAP = 30;
+  if (Math.abs(ends[0].ty - ends[1].ty) < GAP) {
+    const [hi, lo] = ends[0].ty <= ends[1].ty ? [ends[0], ends[1]] : [ends[1], ends[0]];
+    const mid = (hi.ty + lo.ty) / 2; hi.ty = mid - GAP/2; lo.ty = mid + GAP/2;
+  }
+  ends.forEach(o => { const px = x(N)+20;
+    s+=`<line x1="${x(N)}" y1="${y(o.a)}" x2="${px}" y2="${y(o.b)}" stroke="${c(o.k)}" stroke-width="1.5" stroke-dasharray="2 4"/><circle cx="${px}" cy="${y(o.b)}" r="4" fill="${c(o.k)}"/>`;
+    if (Math.abs(o.ty - y(o.b)) > 1) s+=`<line x1="${px+4}" y1="${y(o.b)}" x2="${px+10}" y2="${o.ty}" stroke="${c(o.k)}" stroke-width="1"/>`;
+    s+=`<text x="${px+12}" y="${o.ty-2}" font-size="10" fill="${c(o.k)}">${o.t}</text><text x="${px+12}" y="${o.ty+11}" font-size="12" font-weight="700" fill="${c(o.k)}">${man(o.b)}</text>`; });
   if(r.crossT!==null && r.crossT<=N){ const v=r.gInit+r.gAnnual*r.crossT, cx=L+(W-L-R)*r.crossT/Math.max(N,1);
-    s+=`<circle cx="${cx}" cy="${y(v)}" r="6" fill="${c("--panel")}" stroke="${c("--ink")}" stroke-width="2"/><text x="${cx}" y="${y(v)-12}" font-size="12" font-weight="700" fill="${c("--ink")}" text-anchor="middle">約${r.crossT.toFixed(1)}年で逆転</text>`; }
+    s+=`<circle cx="${cx}" cy="${y(v)}" r="6" fill="${c("--panel")}" stroke="${c("--ink")}" stroke-width="2"/><text x="${cx}" y="${Math.max(14, y(v)-14)}" font-size="12" font-weight="700" fill="${c("--ink")}" text-anchor="${cx > W-R-50 ? "end" : cx < L+50 ? "start" : "middle"}">約${r.crossT.toFixed(1)}年で逆転</text>`; }
   svg.innerHTML=s;
 }
 
@@ -415,6 +430,7 @@ app.addEventListener("input", e => {
   S[k] = e.target.type==="checkbox" ? e.target.checked : e.target.value;
   // 表示構造が変わる入力は再描画、それ以外は結果だけ更新
   if (k==="gasKey") S.gFe = "";
+  if (k==="evKey") { S.gasKey = EVS[S.evKey]?.rival || "n-one"; S.gFe = ""; S.rivalType = "gas"; }
   if (["gasKey","evKey","kmMode","rivalType"].includes(k)) { if(k==="rivalType" && GASES[S.gasKey] && !GASES[S.gasKey].custom && GASES[S.gasKey].type!==S.rivalType) S.gasKey=""; render(true); return; }
   if (k==="homeCharge"){ const w=document.getElementById("shareWrap"); if(w) w.hidden=!S.homeCharge; if(current==="area"){ render(true); return; } }
   if (k==="homeShare"){ const o=document.getElementById("shareOut"); if(o) o.textContent=S.homeShare+"%"; }

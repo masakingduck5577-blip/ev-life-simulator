@@ -101,7 +101,7 @@ function memoExtras() {
 
 screens.memo = () => {
   const r = doneB() || S.fromLink ? calc() : null;
-  if (!r) return header("相談メモ", "home", "相談メモ") + `<main class="main"><div class="info">相談メモは、コスト比較の結果から作ります。先にコストを比べてください（約3分）。</div></main>` + footer(btn("gas", "コストを比べる"));
+  if (!r) return header("相談メモ", "home", "相談メモ") + `<main class="main"><div class="info">相談メモは、コスト比較の結果から作ります。先にコストを比べてください（約3分）。</div></main>` + footer(btn("ev", "コストを比べる"));
   memoInitAsks(r);
   const rv = rivalShort(), km = Math.round(r.km);
   const dA = r.gAnnual - r.eAnnual;   // ランニングコスト（燃料・税金・メンテ・保険）の1年あたりの差
@@ -186,7 +186,7 @@ function drawQR() {
 
 const memoMsg = (t) => { const m = document.getElementById("memoMsg"); if (m) m.textContent = t; };
 Object.assign(ACT, {
-  driveApply() { if (driveResult().state !== "ok") return; S.dUse = true; S.evKey = S.dCar; go(S.gasKey ? "cost" : "gas"); },
+  driveApply() { if (driveResult().state !== "ok") return; S.dUse = true; S.evKey = S.dCar; S.gasKey = EVS[S.dCar]?.rival || "n-one"; S.rivalType = "gas"; go("gas"); },
   driveOff() { S.dUse = false; render(true); },
   setKm(v) { S.annualKm = +v; S.kmMode = "direct"; render(true); },
   memoAsk(id) { S.memoAsks = { ...S.memoAsks, [id]: !S.memoAsks[id] }; render(true); },
