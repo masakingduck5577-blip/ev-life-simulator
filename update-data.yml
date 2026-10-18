@@ -1,0 +1,98 @@
+# データの自動更新
+#  ・国のCEV補助金 … 毎日 6:00（日本時間）に次世代自動車振興センターのページを確かめる
+#  ・EV充電施設   … 毎週月曜 6:30（日本時間）に OpenStreetMap から取り直す
+#  変わったら自動でコミットし、補助金が変わったとき・読み取れなかったときは Issue で知らせる。
+#  Actions タブの「データの自動更新」→「Run workflow」で、すぐに実行もできる。
+name: データの自動更新
+
+on:
+  schedule:
+    - cron: "0 21 * * *"    # 毎日 6:00 JST（補助金）
+    - cron: "30 21 * * 1"   # 毎週月曜 6:30 JST（充電施設）
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "更新するもの"
+        type: choice
+        options: [all, subsidy, chargers]
+        default: all
+
+permissions:
+  contents: write
+  issues: write
+  pages: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: PDFを読む道具を入れる
+        run: sudo apt-get update -q && sudo apt-get install -y -q poppler-utils
+
+      - name: 補助金を確かめる
+        id: sub
+        if: (github.event_name == 'schedule' && github.event.schedule == '0 21 * * *') || (github.event_name == 'workflow_dispatch' && inputs.target != 'chargers')
+        run: python update_subsidy.py
+
+      - name: 充電施設を取り直す
+        id: chg
+        if: (github.event_name == 'schedule' && github.event.schedule == '30 21 * * 1') || (github.event_name == 'workflow_dispatch' && inputs.target != 'subsidy')
+        continue-on-error: true
+        run: python update_chargers.py
+
+      - name: 変わったファイルをコミット
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add subsidy.js chargers.js chargers.csv
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "データの自動更新（$(TZ=Asia/Tokyo date +%Y-%m-%d)）"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 公開サイトを作り直す
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" || echo "Pagesの再作成を依頼できませんでした（数分後に自動で反映される場合があります）"
+
+      - name: 補助金の変化を Issue で知らせる
+        if: steps.sub.outputs.notify == 'changed'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue create --title "補助金の情報が変わりました（$(TZ=Asia/Tokyo date +%Y-%m-%d)）" --body-file subsidy_issue.md
+
+      - name: 補助金を読み取れなかったことを Issue で知らせる（同じIssueが開いていれば出さない）
+        if: steps.sub.outputs.notify == 'failed'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="補助金の自動確認で読み取れない項目があります"
+          if [ -z "$(gh issue list --state open --search "in:title $title" --json number --jq '.[0].number')" ]; then
+            gh issue create --title "$title" --body-file subsidy_issue.md
+          fi
+
+      - name: 充電施設の取り込みに失敗したことを Issue で知らせる
+        if: steps.chg.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="充電施設の自動取り込みに失敗しました"
+          if [ -z "$(gh issue list --state open --search "in:title $title" --json number --jq '.[0].number')" ]; then
+            gh issue create --title "$title" --body "OpenStreetMap からの取り込みに失敗したため、充電施設の一覧は前回のままです。Actions のログを確認してください：${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          fi

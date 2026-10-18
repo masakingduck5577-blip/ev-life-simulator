@@ -343,3 +343,17 @@ textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--panel);bo
   .memo-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .lsopt[aria-pressed="false"]{display:none}
 }
+
+/* ===== 補助金の受付期限 ===== */
+.deadline{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:12px;background:var(--warn-t);font-size:13px;line-height:1.6}
+.deadline b{color:var(--warn);font-size:13px}
+.deadline span{font-weight:700}
+.deadline .dl-sub{font-weight:400;font-size:12px;color:var(--sub)}
+.deadline a{font-size:12px;font-weight:700;color:var(--ev);min-height:32px;display:inline-flex;align-items:center}
+.deadline.open{background:var(--bg)} .deadline.open b{color:var(--ev)}
+.deadline-line{margin:0;padding:8px 12px;border-radius:10px;background:var(--warn-t);color:var(--warn);font-size:13px;font-weight:700}
+.deadline-line.open{background:var(--ev-t);color:var(--ev)}
+
+/* ===== Honda Charge ===== */
+.pin.honda{background:#C8102E;border-radius:4px;width:24px;height:24px;font-size:12px}
+.chip.k-honda[aria-pressed="true"]{background:#C8102E;border-color:#C8102E;color:#fff}

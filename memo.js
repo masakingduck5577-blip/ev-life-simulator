@@ -68,7 +68,7 @@ screens.drive.update = () => {
    auto : 試算の結果から「おすすめ」として最初からチェックしておく条件
 */
 const MEMO_ASKS = [
-  { id: "subsidy", label: "補助金の受付状況と締め切り", auto: (r) => r && r.E.sub > 0 },
+  { id: "subsidy", label: "補助金の受付状況と締め切り（納車が間に合うか）", auto: (r) => r && r.E.sub > 0 },
   { id: "estimate", label: "見積もり・値引き・下取り", auto: (r) => r && r.diff >= 0 },
   { id: "charger", label: "自宅に充電器を付ける費用と工事", auto: () => S.homeCharge },
   { id: "apartment", label: "集合住宅での充電のしかた", auto: () => !S.homeCharge },
@@ -120,10 +120,11 @@ screens.memo = () => {
       <section class="memo-card">
         <h2>あなたの試算</h2>
         <div class="memo-res">
-          <div><span>1 買うとき</span><b class="num">${r.E.sub > 0 ? `補助金で ${man0(r.E.sub)} 安く` : "補助金：対象外・未確認"}</b></div>
+          <div><span>1 買うとき</span><b class="num">${r.E.sub > 0 ? `補助金で ${man0(r.E.sub)} 安く` : SUBSIDY.closed ? "国の補助金：受付終了" : "補助金：対象外・未確認"}</b></div>
           <div><span>2 乗るとき</span><b class="num">${dM >= 0 ? `燃料代が 月 約${yen100(dM)} 安く` : `燃料代が 月 約${yen100(dM)} 高く`}</b></div>
           <div class="sum"><span>合わせると</span><b class="num">${total}</b></div>
         </div>
+        ${r.E.sub > 0 ? `<p class="deadline-line ${subsidyStatus().state}" style="margin:0">補助金：${subsidyStatus().text}（${SUBSIDY.applyRule}）</p>` : ""}
         ${ext.area || ext.trip || ext.ls ? `<ul class="memo-ext">${[ext.area, ext.trip, ext.ls].filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
         <dl class="memo-cond">${conds.map(([t, v]) => `<div><dt>${t}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
         <p class="hint" style="margin:0">価格・燃費・係数の一部は仮の値です。正式な金額は見積もりで確認してください。</p>

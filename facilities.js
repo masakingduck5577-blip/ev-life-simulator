@@ -20,6 +20,14 @@
      note     : 補足
      updatedAt: 確認した日（例 "2026-10-20"）
      demo     : true のものは画面に「デモ」と表示される。本番データでは書かない
+     network  : "Honda Charge"（ＨＯＮＤＡチャージ）/ "Honda販売店" など。地図で色分けして表示する
+
+   ※ 充電施設の多くは chargers.js（OpenStreetMap から毎週自動で取り込む）に入っている。
+     ここには、自分たちで確かめた施設・EVで得する施設・自動の一覧にない施設を書く。
+     ＨＯＮＤＡチャージはアプリでしか場所が公開されていないので、見つけたらここに追加する：
+       { id:"hc-001", name:"ニトリ〇〇店", lat:36.5, lng:139.9, type:"quick", kw:50,
+         network:"Honda Charge", updatedAt:"2026-10-20" },
+     同じ場所（約50m以内）に自動の一覧の施設があるときは、ここに書いたほうを表示する。
 
    ※ 下の DEMO で始まるデータは動作確認用の架空の施設です。
      実データを登録したら削除してください。
@@ -46,6 +54,16 @@ window.FACILITIES = [
    [緯度, 経度] の点を順につないだ多角形。今は栃木県をおおまかに囲む仮の範囲。
    データを集めた範囲に合わせて書き換える。
    ========================================================= */
+/* ---------- 自動で取り込んだ一覧（chargers.js）と合わせる ---------- */
+(function mergeAutoFacilities() {
+  const auto = window.AUTO_FACILITIES || [];
+  if (!auto.length) return;                                   // まだ取り込む前はデモのまま
+  const own = window.FACILITIES.filter((f) => !f.demo);       // 自動の一覧が入ったらデモは消す
+  const near = (a, b) => Math.abs(a.lat - b.lat) * 111000 < 50 && Math.abs(a.lng - b.lng) * 90000 < 50;
+  const ownCharge = own.filter((f) => f.type !== "merit");
+  window.FACILITIES = own.concat(auto.filter((a) => !ownCharge.some((o) => near(o, a))));
+})();
+
 window.COVERAGE = [
   [37.16, 139.33], [37.16, 140.30], [36.70, 140.30], [36.37, 140.30],
   [36.20, 139.95], [36.20, 139.33]

@@ -20,12 +20,20 @@ const S = {
   pDest:0,                 // 目的地の充電単価（施設データに price がないとき）
   home:null, work:null, places:[],   // {lat,lng,label,detail} / work:+days / place:+cat,freq
   pickTarget:"home", searchQ:"", searchResults:[], searchMsg:"",
-  layers:{quick:true, normal:true, merit:true},
+  layers:{quick:true, normal:true, merit:true, honda:true},
+  chgFilter:"all", chgQ:"", chgShow:60,
   selPlace:null, selFac:null,
   trip:{dest:null, overnight:true, stayH:3, season:"win", startSoc:100, destCharge:true, reserve:20},
   tripQ:"", tripResults:[], tripMsg:"",
   area:null, tripRes:null, kmApplied:false
 };
+/* 自動で確かめた補助金の情報（subsidy.js）があれば、cars.js の値を置き換える */
+(function applySubsidyAuto(){
+  const a = window.SUBSIDY_AUTO; if (!a) return;
+  Object.entries(a.subsidy || {}).forEach(([k, v]) => { if (v !== null && v !== undefined && v !== "") SUBSIDY[k] = v; });
+  if (a.checkedAt) SUBSIDY.checkedAt = a.checkedAt;
+  Object.entries(a.amounts || {}).forEach(([k, v]) => { if (EVS[k] && v > 0) EVS[k].sub = v; });
+})();
 const n = k => { const v = parseFloat(S[k]); return isFinite(v) ? v : 0; };
 const yen = v => (v<0?"−":"") + "¥" + Math.round(Math.abs(v)).toLocaleString("ja-JP");
 const man = v => (v<0?"−":"") + (Math.abs(v)/10000).toFixed(1).replace(/\.0$/,"") + "万円";
@@ -34,7 +42,7 @@ const sman = v => (v>0?"+":v<0?"−":"±") + (Math.abs(v)/10000).toFixed(1).repl
 function gasCar(){ const d=GASES[S.gasKey]; if(!d) return null;
   return d.custom ? {name:d.name, price:n("gc_price"), fe:n("gc_fe"), tax:n("gc_tax"), wt:n("gc_wt")} : d; }
 function evCar(){ const d=EVS[S.evKey]; if(!d) return null;
-  return d.custom ? {name:d.name, price:n("ec_price"), sub:n("ec_sub"), wh:n("ec_wh"), kwh:n("ec_kwh"), tax:n("ec_tax"), wt:n("ec_wt")} : d; }
+  return d.custom ? {name:d.name, price:n("ec_price"), sub:SUBSIDY.closed?0:n("ec_sub"), wh:n("ec_wh"), kwh:n("ec_kwh"), tax:n("ec_tax"), wt:n("ec_wt")} : {...d, sub:subOf(d)}; }
 function rivalType(){ const d=GASES[S.gasKey]; return d && !d.custom ? d.type : S.rivalType; }
 const rivalShort = () => RIVAL_SHORT[rivalType()] || "ガソリン車";
 const rivalLong = () => RIVAL_LABEL[rivalType()] || "ガソリン車";
@@ -115,6 +123,7 @@ screens.home = () => {
   return header("EV Life Simulator",null,"ホーム") + `<main class="main">
     <div class="hero"><span class="area">Honda Cars 栃木中央 ゆいの杜店</span><h1>EVに買い替えたら、<br>お金はどう変わる？</h1><p>今の車の買い替え候補とEVを、あなたの使い方で比べます。</p></div>
     <button class="startcard" data-go="gas"><span class="k">まずはここから・約3分</span><span class="t">コストを比べる</span><span class="d">補助金でいくら安く買えるか、燃料代が月いくら変わるか</span>${doneB()?'<span class="pill done" style="align-self:flex-start">比較済み</span>':""}</button>
+    ${(()=>{ const st=subsidyStatus(); return `<p class="deadline-line ${st.state}">${st.state==="over"?st.text:`国の補助金は${SUBSIDY.endText}に受付終了の見込み${st.days>0?`（早ければあと約${st.days}日）`:""}`}</p>`; })()}
     ${card("走","レンタカーを返却した方","今日の走りから、あなたの電費で計算します","drive", pill(S.dUse))}
     <section class="sec"><h2>気になることがあれば</h2><p class="sd">見たいものだけで大丈夫です</p>
     ${card("C","充電して行けるか","自宅・職場・よく行く場所や、旅行先までの充電","map", pill((S.area&&S.area.status==="done")||(S.tripRes&&S.tripRes.status==="done")))}
@@ -154,7 +163,7 @@ screens.gas = () => {
 screens.ev = () => {
   const G = GASES[S.gasKey];
   const cards = Object.entries(EVS).map(([k,d]) => `<label class="carc"><input type="radio" name="evKey" data-k="evKey" value="${k}"${S.evKey===k?" checked":""}>
-    <span class="b"><span class="nm">${d.name}${d.ok===false?' <span class="flag">要確認</span>':""}</span><span class="cat">${d.cat}</span>${d.custom?"":spec([["車両価格",man(d.price)],["補助金（国）",man(d.sub)],["実質",man(d.price-d.sub)],["電費",d.wh+" Wh/km"],["バッテリー",d.kwh+" kWh"],["自動車税",yen(d.tax)+"/年"]])}</span></label>`).join("");
+    <span class="b"><span class="nm">${d.name}${d.ok===false?' <span class="flag">要確認</span>':""}</span><span class="cat">${d.cat}</span>${d.custom?"":spec([["車両価格",man(d.price)],["補助金（国）",SUBSIDY.closed?"受付終了":man(d.sub)],["実質",man(d.price-subOf(d))],["電費",d.wh+" Wh/km"],["バッテリー",d.kwh+" kWh"],["自動車税",yen(d.tax)+"/年"]])}</span></label>`).join("");
   const custom = EVS[S.evKey]?.custom ? `<div class="custom"><strong style="font-size:14px">スペックを入力</strong><div class="row2">${numIn("ec_price","車両価格（円）",10000)}${numIn("ec_sub","補助金（円）",10000)}${numIn("ec_wh","電費（Wh/km）",1)}${numIn("ec_kwh","バッテリー（kWh）",0.1)}${numIn("ec_tax","自動車税（円/年）",100)}${numIn("ec_wt","重量税（円/年換算）",100)}</div></div>` : "";
   return header("気になるEV","gas","入力 2/2") + `<main class="main">
     ${G?`<div class="compare"><div><div class="k">比べる${rivalLong()}</div><div class="n">${G.name}</div></div><button class="lk" data-go="gas" style="margin:0">変更</button></div>`:""}
@@ -203,6 +212,14 @@ screens.cost = () => {
   </main>` + footer(btn("memo","相談メモを作る"), btn2("total","暮らし・おでかけも見る"));
 };
 
+/* 補助金の受付期限（次世代自動車振興センターの発表。cars.js の SUBSIDY） */
+function subsidyBox(){
+  const st = subsidyStatus();
+  return `<div class="deadline ${st.state}"><b>補助金の受付期限</b><span>${st.text}</span>
+    ${st.state==="closed" ? "" : `<span class="dl-sub">${SUBSIDY.applyRule}。受付が終わる前に車の登録が済むよう、納車までの期間に注意してください（${jpDate(SUBSIDY.noticeDate)}の発表）。</span>`}
+    <a href="${SUBSIDY.url}" target="_blank" rel="noopener">最新の情報を見る（次世代自動車振興センター）</a></div>`;
+}
+
 /* 横棒1本（①②で共通） */
 function barRow(label, value, pct, color, opts={}){
   const hatch = opts.hatchPct ? `<span class="hatch" style="left:${pct}%;width:${opts.hatchPct}%"></span><span class="subtag" style="left:min(${pct}%, calc(100% - 7em))">${opts.hatchLabel}</span>` : "";
@@ -227,7 +244,9 @@ screens.cost.update = () => {
   const sub = r.E.sub || 0, eList = r.ePrice, eReal = r.ePrice - sub, gP = r.gPrice;
   const maxP = Math.max(eList, gP, 1), pc = v => Math.max(0, v / maxP * 100);
   const gap = eReal - gP;
-  const p1title = sub > 0
+  const p1title = SUBSIDY.closed
+    ? `<h2 class="ttl" id="p1t">国の補助金は<br><em style="font-size:26px">受付終了</em></h2>`
+    : sub > 0
     ? `<h2 class="ttl" id="p1t">補助金で<br><em class="num">${man0(sub)}</em> 安く買える</h2>`
     : `<h2 class="ttl" id="p1t">この車種の補助金は<br><em style="font-size:26px">対象外・未確認</em></h2>`;
   const gapRow = gap > 0
@@ -239,7 +258,8 @@ screens.cost.update = () => {
       ${barRow("実質の価格", man0(eReal), pc(eReal), "var(--ev)", {big:true})}
       ${barRow(rv, man0(gP), pc(gP), "var(--gas)", {vColor:"var(--gas)"})}
     </div>${gapRow}
-    <p class="hint" style="margin:0">${SUBSIDY_NOTE}${S.evAdj||S.gasAdj?"　値引き・オプション差を含む。":""}</p>`;
+    ${sub>0 || SUBSIDY.closed ? subsidyBox() : ""}
+    <p class="hint" style="margin:0">${subsidyNote()}${S.evAdj||S.gasAdj?"　値引き・オプション差を含む。":""}</p>`;
 
   /* ② 乗るとき：燃料代 */
   const gM = r.gasEnergy/12, eM = r.evEnergy/12, dM = gM - eM;

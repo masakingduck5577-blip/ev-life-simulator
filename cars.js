@@ -8,7 +8,7 @@ const EVS = {
   "n-one-e":  {name:"N-ONE e:（e:G）", cat:"軽乗用EV", price:2699400, sub:580000, wh:105, kwh:29.6, tax:10800, wt:0, qkw:50, acKw:6, ok:true},
   "super-one":{name:"Super-ONE", cat:"小型EV", price:3390200, sub:1300000, wh:113, kwh:29.6, tax:25000, wt:0, qkw:50, acKw:6, ok:false},
   "insight":  {name:"INSIGHT", cat:"クロスオーバーSUV EV", price:5500000, sub:1300000, wh:134, kwh:68.8, tax:25000, wt:0, qkw:150, acKw:6, ok:true},
-  "n-van-e":  {name:"N-VAN e:", cat:"軽商用EV", price:2600000, sub:0, wh:126, kwh:29.6, tax:5000, wt:0, qkw:50, acKw:6, ok:false},
+  "n-van-e":  {name:"N-VAN e:", cat:"軽商用EV", price:2600000, sub:580000, wh:126, kwh:29.6, tax:5000, wt:0, qkw:50, acKw:6, ok:false},
   "custom":   {name:"その他のEV", cat:"スペックを入力", custom:true}
 };
 /* 比べる相手の車。type は "gas"（ガソリン車）/ "hv"（ハイブリッド車）。価格・燃費は仮の値 */
@@ -26,5 +26,35 @@ const DEP = { gas:{hi:0.12, mid:0.15, lo:0.18}, ev:{hi:0.15, mid:0.19, lo:0.23} 
 const SCEN_LABEL = {hi:"高め", mid:"中間", lo:"低め"};
 const SUBSIDY_HOLD_YEARS = 4;
 
-/* 補助金の出典の表記（年度・時点を更新したらここを書き換える） */
-const SUBSIDY_NOTE = "国のCEV補助金（2026年度・[〇]月時点）。予算がなくなると受付終了。自治体の補助は別途確認。";
+/* =========================================================
+   国のCEV補助金（次世代自動車振興センター）
+   センターのお知らせが更新されたら、ここを書き換える
+   ・受付終了の見込み … https://www.cev-pc.or.jp/hojo/cev.html の「申請受付終了見込み時期についてのお知らせ」
+   ・車種ごとの金額   … 同じページの「銘柄ごとの補助金交付額」（上の EVS の sub に入れる）
+   ========================================================= */
+const SUBSIDY = {
+  name: "国のCEV補助金（令和7年度補正）",
+  amountAsOf: "2026-10-13",            // 車種ごとの金額を確かめた日（センターの表の日付）
+  endText: "2026年12月上旬〜下旬",       // 受付終了の見込み（センターの発表どおりに書く）
+  endFrom: "2026-12-01",               // 見込みの早いほう（残り日数はここまでで数える）
+  endTo: "2026-12-31",                 // 見込みの遅いほう（これを過ぎたら「終了した可能性」と表示）
+  noticeDate: "2026-09-04",            // 見込みが発表された日
+  applyRule: "新車登録（届出）から1か月以内に申請",
+  url: "https://www.cev-pc.or.jp/hojo/cev.html",
+};
+const jpDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return `${y}年${m}月${d}日`; };
+const subsidyNote = () => SUBSIDY.closed
+  ? `${SUBSIDY.name}は受付を終了しています（自動確認：${jpDate(SUBSIDY.checkedAt || SUBSIDY.amountAsOf)}）。自治体の補助は別途確認。`
+  : `${SUBSIDY.name}。車種ごとの金額は${jpDate(SUBSIDY.amountAsOf)}時点${SUBSIDY.checkedAt ? `（${jpDate(SUBSIDY.checkedAt)}に自動確認）` : ""}。予算がなくなりしだい受付終了。自治体の補助は別途確認。`;
+const subOf = (d) => SUBSIDY.closed ? 0 : (d.sub || 0);
+
+/* 受付終了までの状況。today を渡すとその日で判定（テスト用） */
+function subsidyStatus(today) {
+  const t = today ? new Date(today + "T00:00:00") : new Date(); t.setHours(0, 0, 0, 0);
+  const from = new Date(SUBSIDY.endFrom + "T00:00:00"), to = new Date(SUBSIDY.endTo + "T00:00:00");
+  const days = Math.round((from - t) / 864e5);
+  if (SUBSIDY.closed) return { state: "closed", days, text: "国の補助金の受付は終了しました。この試算では補助金を0円として計算しています。" };
+  if (t > to) return { state: "over", days, text: `受付終了の見込み（${SUBSIDY.endText}）を過ぎています。終了した可能性があるので、最新の情報を確認してください。` };
+  if (days <= 0) return { state: "now", days, text: `受付終了の見込み時期（${SUBSIDY.endText}）に入っています。予算がなくなりしだい終了します。` };
+  return { state: days <= 30 ? "near" : "open", days, text: `受付終了の見込みは${SUBSIDY.endText}。早ければあと約${days}日です。` };
+}
