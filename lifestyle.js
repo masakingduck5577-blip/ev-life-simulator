@@ -230,5 +230,23 @@ function tileA() {
     <div class="links"><button class="lk" data-go="effect">提案をすべて見る</button><button class="lk" data-go="lifestyle">場面を選び直す</button></div></div>`;
 }
 
+/* =========================================================
+   結果画面の「値段だけじゃない、EVとガソリン車の違い」
+   場面を選んでいればその提案の上位、まだなら代表的なカードを出す
+   ========================================================= */
+const EVLIFE_DEFAULT = ["no-gas-station", "wait-ac", "power-outage", "quiet-ride", "full-every-morning", "camp-power"];
+function evLifeHtml() {
+  const ok = (c) => { const q = c.requires || {}; return !(q.homeCharge === true && !S.homeCharge) && !(q.homeCharge === false && S.homeCharge); };
+  const ranked = S.ls.seen ? lsRanked() : [];
+  const list = (ranked.length ? ranked : EVLIFE_DEFAULT.map((id) => CARDS().find((c) => c.id === id)).filter((c) => c && ok(c))).slice(0, 4);
+  if (!list.length) return "";
+  const card = (c) => { const m = lsMetric(c);
+    return `<button type="button" class="elcard" data-act="lsOpen:${esc(c.id)}"><span class="el-pic">${lsIcon(c.icon, true)}</span>
+      <span class="el-tx"><b>${esc(c.title)}</b><span>${esc(c.body)}</span>${m && m.value ? `<span class="el-m"><small>${esc(m.label)}</small><em class="num">${esc(m.value)}</em></span>` : ""}</span></button>`; };
+  return `<div class="el-head">${pic("sparkles",36)}<div><h2>値段だけじゃない、<br>EVとガソリン車の違い</h2><p>${ranked.length ? "あなたが選んだ場面に合う使い方" : "EVのある毎日で変わること"}</p></div></div>
+    <div class="el-list">${list.map(card).join("")}</div>
+    <button class="btn2" data-go="lifestyle">${ranked.length ? "場面を選び直す" : "自分に合う使い方を探す"}</button>`;
+}
+
 /* ---------- 起動 ---------- */
 render(false);

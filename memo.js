@@ -112,7 +112,7 @@ screens.memo = () => {
     ["自宅での充電", S.homeCharge ? `できる（${Math.round(n("homeShare"))}%を自宅で）` : "できない"], ["乗る年数", `${r.N}年`],
     ["EVの電費", r.drive ? `今日の走りから 1kWhで${r.drive.kmPerKwh.toFixed(1)}km` : "カタログ値から"],
   ];
-  const total = r.diff < 0 ? `${r.N}年で 約${man(-r.diff)} おトク` : `${r.N}年では${rv}が 約${man(r.diff)} 安い`;
+  const total = r.diff < 0 ? `${r.N}年で EVが 約${man(-r.diff)} 安い` : `${r.N}年で ${rv}が 約${man(r.diff)} 安い`;
   return header("相談メモ", "cost", "相談メモ") + `<main class="main" style="gap:18px">
     ${S.fromLink ? `<div class="info">共有されたリンクから開いています。数字は送られた条件で計算し直しています。</div>` : ""}
     <div class="sec memo-top">${pic("clipboard",64)}<div><h1 class="memo-h">聞きたいことを<br>1枚にまとめました</h1><p class="sd" style="margin:0">スタッフに見せるだけでOK。相談は自由です。</p></div></div>

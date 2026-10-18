@@ -593,3 +593,38 @@ table{color:var(--ink)}
   .pillar .ttl em{font-size:48px}
 }
 .home1{padding-top:16px}.st-grid span{display:flex;align-items:center;gap:4px}
+
+/* ===== 結果画面の並び（乗るとき→買うとき→トータル→値段以外） ===== */
+.pillar-kick{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#FF6B6F}
+.pillar-kick i{font-style:normal;width:24px;height:24px;border-radius:50%;background:var(--red-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}
+.p3 .sumtop{margin:2px 0 4px}
+.sumtop .st-big{font-size:22px}
+.sumtop .who{display:inline-block;padding:0 10px;border-radius:999px;font-size:20px;line-height:1.5;vertical-align:2px}
+.sumtop .who.ev{background:var(--red-grad);color:#fff}
+.sumtop .who.gas{background:#4A4D55;color:#fff}
+.sumtop .st-big.bad em{color:#fff}
+.st-grid span{align-items:flex-start}
+.evlife{display:flex;flex-direction:column;gap:12px;padding:20px;border-radius:22px;background:var(--panel);border:1px solid var(--line)}
+.evlife:empty{display:none}
+.el-head{display:flex;align-items:center;gap:12px}
+.el-head h2{font-size:20px;line-height:1.35}
+.el-head p{margin:2px 0 0;font-size:12px;color:var(--sub)}
+.el-list{display:grid;grid-template-columns:1fr;gap:10px}
+.elcard{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:16px;background:var(--panel2);border:1px solid transparent;color:var(--ink);text-align:left;cursor:pointer;width:100%}
+.elcard:hover{border-color:var(--ev)}
+.el-pic{flex-shrink:0;width:56px;height:56px;display:flex;align-items:center;justify-content:center}
+.el-pic .pic{width:52px;height:52px}
+.el-tx{display:flex;flex-direction:column;gap:4px;min-width:0}
+.el-tx b{font-size:15px;color:#fff;line-height:1.4}
+.el-tx>span{font-size:12px;color:var(--sub);line-height:1.6}
+.el-m{display:flex;flex-direction:column;margin-top:4px}
+.el-m small{font-size:11px;color:var(--sub)}
+.el-m em{font-style:normal;font-weight:700;font-size:16px;color:#FF4A4F}
+@media (min-width:960px){ .el-list{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media (max-width:959px){
+  .st-grid{grid-template-columns:1fr;gap:6px}
+  .st-grid div{flex-direction:row;align-items:center;justify-content:space-between;padding:10px 14px}
+  .st-grid span{font-size:12px;align-items:center}
+  .st-grid b{font-size:18px;text-align:right}
+}
+.st-grid b{white-space:nowrap}

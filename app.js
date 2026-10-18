@@ -165,22 +165,22 @@ screens.ev = () => {
 screens.cost = () => {
   S.seenCost = true;
   return header("コスト比較","gas","結果") + `<main class="main" style="gap:16px">
-    <section class="sumtop" id="sumtop" aria-live="polite"></section>
-    <div class="cond" id="cond"></div>
-    <div class="pair"><section class="pillar" id="p1" aria-labelledby="p1t"></section>
-    <section class="pillar" id="p2" aria-labelledby="p2t"></section></div>
-    <button class="mapguide" data-go="map"><span class="mg-pic">${pic("map",56)}<span class="mg-plug">${pic("plug",26)}</span></span>
-      <span class="mg-tx"><b>充電する場所は？ 地図でくわしく</b><span>家の近く・いつもの場所・旅行先までの充電スポットと、夏・冬で行けるかが分かります</span></span>
-      <span class="mg-go">地図を見る${CHEV_R}</span></button>
+    <div class="pair"><section class="pillar" id="p2" aria-labelledby="p2t"></section>
+    <section class="pillar" id="p1" aria-labelledby="p1t"></section></div>
     <section class="p3">
-      <div class="k p3k">${pic("coin",40)}<span>3　合わせると</span></div>
-      <div id="p3head"></div>
+      <div class="pillar-kick"><i>3</i>ガソリン車とトータルで比べると</div>
+      <section class="sumtop" id="sumtop" aria-live="polite"></section>
       ${slider("years","保有予定年数",1,15,1,v=>v+"年","1年","15年","yearsOut")}
       <svg id="chart" viewBox="0 0 520 260" width="100%" role="img" aria-label="累計コストの推移"></svg>
       <div class="legend"><span><i class="sw g"></i><span id="lgG">ガソリン車</span></span><span><i class="sw e"></i>EV</span><span>最終年の右の点は残価を差し引いた総額</span></div>
       <p class="hint" id="p3note" style="margin:0"></p>
       <div class="warnbox" id="clawback" hidden></div>
     </section>
+    <section class="evlife" id="evlife"></section>
+    <button class="mapguide" data-go="map"><span class="mg-pic">${pic("map",56)}<span class="mg-plug">${pic("plug",26)}</span></span>
+      <span class="mg-tx"><b>充電する場所は？ 地図でくわしく</b><span>家の近く・いつもの場所・旅行先までの充電スポットと、夏・冬で行けるかが分かります</span></span>
+      <span class="mg-go">地図を見る${CHEV_R}</span></button>
+    <div class="cond" id="cond"></div>
     <details id="more"><summary>内訳と条件を詳しく見る</summary><div class="body" style="gap:20px">
       <section class="sec"><h2 id="tblTitle">内訳</h2><div class="tablewrap"><table class="num"><thead><tr><th>項目</th><th class="g" id="thG">ガソリン車</th><th class="e">EV</th><th>差</th></tr></thead><tbody id="tbody"></tbody></table></div></section>
       <section class="sec"><h2>充電の頻度（目安）</h2><div class="kv" id="freq"></div><p class="hint" id="freqNote"></p></section>
@@ -237,17 +237,16 @@ screens.cost.update = () => {
 
   /* 結論（一番上） */
   const runDiff = r.gAnnual - r.eAnnual;
-  const crossBig = r.dInit<=0 && r.dAnnual>=0 ? "買った時から" : (r.crossT!==null && r.crossT<=30 ? `約${r.crossT.toFixed(1)}年` : "逆転しない");
-  document.getElementById("sumtop").innerHTML = `<span class="st-k">${pic("coin",22)} ${r.N}年乗ったときの結果</span>
+  const cheaperFrom = r.dInit<=0 && r.dAnnual>=0 ? "買った時から" : (r.crossT!==null && r.crossT<=30 ? `約${r.crossT.toFixed(1)}年目から` : "この条件では安くならない");
+  document.getElementById("sumtop").innerHTML = `
     ${r.diff < 0
-      ? `<div class="st-big">EVのほうが<br><em class="num">${man(-r.diff)}</em> おトク</div>`
-      : `<div class="st-big bad">${rv}のほうが<br><em class="num">${man(r.diff)}</em> 安い</div>`}
+      ? `<div class="st-big">${r.N}年で <span class="who ev">EV</span> が<br><em class="num">約${man(-r.diff)}</em> 安い</div>`
+      : `<div class="st-big bad">${r.N}年で <span class="who gas">${rv}</span> が<br><em class="num">約${man(r.diff)}</em> 安い</div>`}
     <div class="st-grid">
-      <div><span>${pic("tag",20)} 補助金</span><b class="num">${r.E.sub>0?`−${man0(r.E.sub)}`:"―"}</b></div>
       <div><span>${pic("plug",20)} 維持費/年</span><b class="num">${runDiff>=0?"−":"+"}${man(Math.abs(runDiff))}</b></div>
-      <div><span>${pic("hourglass",20)} 元が取れる</span><b class="num">${crossBig}</b></div>
-    </div>
-`;
+      <div><span>${pic("tag",20)} 補助金</span><b class="num">${r.E.sub>0?`−${man0(r.E.sub)}`:"―"}</b></div>
+      <div><span>${pic("hourglass",20)} ${rv}より安くなるのは</span><b class="num">${cheaperFrom}</b></div>
+    </div>`;
 
   /* ① 買うとき：補助金 */
   const sub = r.E.sub || 0, eList = r.ePrice, eReal = r.ePrice - sub, gP = r.gPrice;
@@ -261,7 +260,7 @@ screens.cost.update = () => {
   const gapRow = gap > 0
     ? `<div class="gap"><span>${rv}との差</span><b class="num">あと ${man0(gap)}</b></div>`
     : `<div class="gap good"><span>補助金を引くと</span><b class="num">${rv}より ${man0(gap)} 安い</b></div>`;
-  document.getElementById("p1").innerHTML = `<span class="pillpic">${pic("tag",72)}</span><div class="kick"><i>1</i>買うとき</div>${p1title}
+  document.getElementById("p1").innerHTML = `<span class="pillpic">${pic("tag",72)}</span><div class="kick"><i>2</i>買うとき</div>${p1title}
     <div class="bars">
       ${barRow("車両価格", man0(eList), pc(eReal), "var(--evl)", sub>0?{hatchPct:pc(sub), hatchLabel:`補助金 −${man0(sub)}`}:{})}
       ${barRow("実質の価格", man0(eReal), pc(eReal), "var(--ev)", {big:true})}
@@ -283,7 +282,7 @@ screens.cost.update = () => {
   const ratio = r.k100a / Math.max(r.k100g, 0.1);
   const yen1000 = v => `${(Math.round(Math.abs(v)/1000)*1000).toLocaleString("ja-JP")}円`;
   const diffRow = (label, k, note) => { const d = gParts[k]-eParts[k]; return `<div class="rcd"><span>${label}</span><b class="num">${Math.abs(d)<500?"ほぼ同じ":`年 ${d>0?"−":"+"}${yen1000(d)}`}</b>${note?`<small>${note}</small>`:""}</div>`; };
-  document.getElementById("p2").innerHTML = `<span class="pillpic">${pic("plug",64)}</span><div class="kick"><i>2</i>乗るとき（1年あたり）</div>${p2title}
+  document.getElementById("p2").innerHTML = `<span class="pillpic">${pic("plug",64)}</span><div class="kick"><i>1</i>乗るとき（1年あたり）</div>${p2title}
     <div class="bars">
       <div class="br"><span class="lb">${pic("fuel",26)}<span>${rv}</span></span>${stack(gParts,"var(--gas)")}<span class="v num" style="color:var(--gas)">年${man(gM)}</span></div>
       <div class="br big"><span class="lb" style="color:var(--ev);font-weight:700">${pic("plug",26)}<span>EV</span></span>${stack(eParts,"var(--ev)")}<span class="v num">年${man(eM)}</span></div>
@@ -300,12 +299,7 @@ screens.cost.update = () => {
     </div>
     <p class="hint" style="margin:0">月にすると約${yen100(dM/12)}の差・年${km.toLocaleString("ja-JP")}km${r.drive?"・電費は今日の走りから":""}。メンテ・保険は目安の値で、設定から変えられます</p>`;
 
-  /* ③ 合わせると */
-  const good = r.diff < 0;
-  const crossTxt = r.crossT!==null && r.crossT<=30 ? `約${r.crossT.toFixed(1)}年で差を取り戻し、<br>` : (r.dInit<=0&&r.dAnnual>=0 ? "購入時からEVが安く、<br>" : "");
-  document.getElementById("p3head").innerHTML = good
-    ? `<div class="big">${crossTxt}${r.N}年で <em class="num">約${man(-r.diff)}</em> おトク</div>`
-    : `<div class="big">${r.N}年では、${rv}が<br>約${man(r.diff)} 安い</div>${r.crossT!==null&&r.crossT<=30?`<p class="hint" style="margin:0">約${r.crossT.toFixed(1)}年以上乗ると、EVのほうが安くなります（売却時の価値を除く）</p>`:""}`;
+  /* ③ 合わせると（見出しは上の sumtop） */
   document.getElementById("p3note").textContent = `${r.charger?`充電器の設置費${man(r.charger)}・`:""}税・メンテナンス・売却時の価値（残価${SCEN_LABEL[S.scen]}）を含めた総額で計算`;
   document.getElementById("yearsOut").textContent = r.N+"年";
 
@@ -327,12 +321,13 @@ screens.cost.update = () => {
   if (r.N < SUBSIDY_HOLD_YEARS && r.E.sub > 0){ cb.hidden=false; cb.innerHTML=`<strong>補助金の返納に注意：</strong>補助金を受けた車は一定期間（目安${SUBSIDY_HOLD_YEARS}年）内に手放すと、一部返納が必要になる場合があります。この試算には含めていません。`; }
   else cb.hidden = true;
   drawChart(r);
+  const ev = document.getElementById("evlife"); if (ev && typeof evLifeHtml === "function") ev.innerHTML = evLifeHtml();
 };
 
 screens.total = () => {
   const r = doneB() ? calc() : null;
   const tileB = r ? `<div class="tile"><div class="h">${pic("coin",32)}<span class="ht">コスト</span></div>
-      <div class="big num" style="color:${r.diff<0?"var(--ev)":"var(--gas)"}">${r.diff<0?`${r.N}年で ${man(-r.diff)} おトク`:`${r.N}年では${rivalShort()}が ${man(r.diff)} 安い`}</div>
+      <div class="big num" style="color:${r.diff<0?"var(--ev)":"var(--gas)"}">${r.diff<0?`${r.N}年で EVが ${man(-r.diff)} 安い`:`${r.N}年で ${rivalShort()}が ${man(r.diff)} 安い`}</div>
       <div class="badges" style="font-size:12px">${r.E.sub>0?`<span class="bdg ok">補助金 −${Math.round(r.E.sub/10000)}万円</span>`:""}${r.gAnnual>r.eAnnual?`<span class="bdg ok">維持費 年約${man(r.gAnnual-r.eAnnual)}安い</span>`:""}</div>
       <div class="s">${r.G.name}（${rivalShort()}）との比較・逆転：${r.cross}</div>
       <div class="links"><button class="lk" data-go="cost">詳しく見る</button><button class="lk" data-go="gas">条件を変える</button></div></div>`
