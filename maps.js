@@ -277,14 +277,14 @@ screens.map = () => {
     <span class="badges">${tags.map((x) => `<span class="bdg mute" style="background:var(--bg)">${x}</span>`).join("")}</span></button>`;
   const ICON_HOME = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>';
   const ICON_PIN = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
-  return header("生活圏・おでかけ", "home", "C マップ") + `<main class="main">
+  return header("充電する場所", "cost", "マップ") + `<main class="main">
     <div class="hero"><div class="herorow" aria-hidden="true">${pic("map",64)}${pic("plug",48)}</div><h1>充電して、<br>どこまで行ける？</h1></div>
     ${card("area", pic("house", 40), "transparent", "var(--ev)", "いつもの暮らし", "家・職場・よく行く場所", "", ["夏・冬で行ける？", "近くの充電"], true)}
     ${card("trip", pic("onsen", 40), "transparent", "var(--gas)", "おでかけ・旅行", "日光・那須など", "", ["途中の充電", "充電代"], false)}
     <div class="compare" style="background:var(--bg)"><div><div class="k" style="color:var(--sub)">試算に使うEV${car.isDefault ? "（未選択のため仮）" : "（車両情報 B から）"}</div><div class="n">${esc(car.name)}</div></div><button class="lk" data-go="ev" style="margin:0">変更</button></div>
     <button type="button" class="hcard" data-go="chargers"><span class="hpic">${pic("plug",40)}</span><span class="tx"><span class="t">充電施設の一覧</span><span class="d">${chgMetaText()}</span></span><span style="color:var(--sub)">${CHEV_R}</span></button>
     <p class="hint">地図データ © OpenStreetMap contributors</p>
-  </main>`;
+  </main>` + footer(btn2("cost", "シミュレーション結果に戻る"));
 };
 
 /* =========================================================
@@ -414,7 +414,7 @@ screens.areamap = () => {
     <div class="mapbox" id="map-areamap"></div>
     <p class="hint">ピンを押すと施設の詳細が開きます。線は自宅からの経路で、経路から1km以内の施設を「経路上」としています</p>
     ${demoNote()}${body}
-  </main>` + footer(btn("total", "トータル結果へ"), btn2("trip", "旅行モードで遠出を試す"));
+  </main>` + footer(btn("cost", "シミュレーション結果に戻る"), btn2("trip", "旅行モードで遠出を試す"));
 };
 screens.areamap.update = () => {
   ensureArea();
@@ -567,7 +567,7 @@ screens.tripres = () => {
     <section class="sec"><h2>目的地の充電施設</h2>${destList || `<p class="hint">登録された施設はありません${T.destCharge ? `（「${T.overnight ? "宿泊先" : "目的地"}で充電できる」の入力から、普通充電6kWを想定して計算しています）` : ""}</p>`}</section>
     ${merit ? `<section class="sec"><h2>目的地の近くのEVで得する施設</h2>${merit}</section>` : ""}
     ${demoNote()}
-  </main>` + footer(btn("tripplan", "充電計画と費用を見る", !O.ok), btn2("trip", "条件を変える"));
+  </main>` + footer(btn("tripplan", "充電計画と費用を見る", !O.ok), btn2("cost", "シミュレーション結果に戻る"));
 };
 screens.tripres.update = () => {
   ensureTrip();
@@ -638,7 +638,7 @@ screens.tripplan = () => {
         <div class="c" style="background:var(--gas-t);border:0"><span class="l g" style="font-weight:700">ガソリン車なら（${esc(R.gasName)}${R.gasDefault ? "・仮" : ""}）</span><span class="v num">約${yen(c.gas)}</span></div></div>
       <p class="hint">急速充電は時間ごとの料金が多いため、kWhあたりに換算した概算です。比べるガソリン車は車両情報（B）で選んだ車種、未選択ならN-ONEで計算しています。</p>
     </section>
-  </main>` + footer(btn("rental", "この旅をEVレンタカーで試す"), btn2("trip", "条件を変える"));
+  </main>` + footer(btn2("cost", "シミュレーション結果に戻る"), btn2("trip", "条件を変える"));
 };
 
 /* =========================================================

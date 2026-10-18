@@ -208,7 +208,7 @@ screens.cost = () => {
       ${numIn("usable","日常で使う充電幅（%）",5)}
       <label class="f">残価シナリオ<select data-k="scen">${["hi","mid","lo"].map(s=>`<option value="${s}"${S.scen===s?" selected":""}>${SCEN_LABEL[s]}</option>`).join("")}</select></label>
     </div></div></details>
-  </main>` + footer(btn("memo","相談メモを作る"), btn2("total","暮らし・おでかけも見る"));
+  </main>` + footer(btn("memo","相談メモを作る"));
 };
 
 /* 補助金の受付期限（次世代自動車振興センターの発表。cars.js の SUBSIDY） */
@@ -249,7 +249,7 @@ screens.cost.update = () => {
       : `<div class="st-big bad">${r.N}年で <span class="who gas">${rv}</span> が<br><em class="num">約${man(r.diff)}</em> 安い</div>`}
     <div class="st-grid">
       <div><span>${pic("plug",20)} 維持費/年</span><b class="num">${runDiff>=0?"−":"+"}${man(Math.abs(runDiff))}</b></div>
-      <div><span>${pic("tag",20)} 補助金</span><b class="num">${r.subTotal>0?`−${man0(r.subTotal)}`:"―"}</b></div>
+      <div><span>${pic("tag",20)} 補助金</span><b class="num">${r.subTotal>0?`最大−${man0(r.subTotal)}`:"―"}</b></div>
       <div><span>${pic("hourglass",20)} ${rv}より安くなるのは</span><b class="num">${cheaperFrom}</b></div>
     </div>`;
 
@@ -261,14 +261,14 @@ screens.cost.update = () => {
   const natUntil = st.state==="open"||st.state==="near" ? `${SUBSIDY.endText}まで（見込み）・あと約${st.days}日` : st.text;
   const LBL = window.LOCAL_STATUS_LABEL || {};
   const cityOpts = (window.LOCAL_SUBSIDY||[]).map(x => `<option value="${x.id}"${x.id===S.city?" selected":""}>${x.name}</option>`).join("");
-  const localAmt = !L ? "―" : L.status==="none" ? "補助なし" : LS.shown ? `−${man0(LS.shown)}` : "金額は確認中";
+  const localAmt = !L ? "―" : L.status==="none" ? "補助なし" : LS.shown ? `<small>最大</small>−${man0(LS.shown)}` : "金額は確認中";
   const p1title = sub > 0
-    ? `<h2 class="ttl" id="p1t">補助金で<br><em class="num">${man0(sub)}</em> <span class="nw">安く買える</span></h2>`
+    ? `<h2 class="ttl" id="p1t">補助金で<br><span class="nw">最大</span> <em class="num">${man0(sub)}</em> <span class="nw">安く買える</span></h2>`
     : `<h2 class="ttl" id="p1t">いま使える補助金は<br><em style="font-size:28px">見つかりません</em></h2>`;
   document.getElementById("p1").innerHTML = `<span class="pillpic">${pic("tag",72)}</span><div class="kick">買うとき</div>${p1title}
     <label class="cityrow"><span>${pic("pin",22)}お住まいの市町</span><select data-k="city" aria-label="お住まいの市町">${cityOpts}</select></label>
     <div class="subrows">
-      <div class="subrow"><div class="sr-h"><b>国のCEV補助金</b><span class="sbadge ${SUBSIDY.closed?"closed":st.state==="near"||st.state==="now"?"soon":"open"}">${SUBSIDY.closed?"受付終了":"受付中"}</span><em class="num">${r.E.sub>0?`−${man0(r.E.sub)}`:"―"}</em></div>
+      <div class="subrow"><div class="sr-h"><b>国のCEV補助金</b><span class="sbadge ${SUBSIDY.closed?"closed":st.state==="near"||st.state==="now"?"soon":"open"}">${SUBSIDY.closed?"受付終了":"受付中"}</span><em class="num">${r.E.sub>0?`<small>最大</small>−${man0(r.E.sub)}`:"―"}</em></div>
         <div class="sr-d">${pic("hourglass",18)}${natUntil}</div></div>
       ${L ? `<div class="subrow"><div class="sr-h"><b>${L.name}の補助金</b><span class="sbadge ${L.status}">${LBL[L.status]||""}</span><em class="num${LS.shown&&!LS.counted?" off":""}${!LS.shown?" na":""}">${localAmt}</em></div>
         <div class="sr-d">${pic("hourglass",18)}${esc(L.until)}</div>
@@ -277,7 +277,7 @@ screens.cost.update = () => {
         ${L.url?`<a class="sr-l" href="${L.url}" target="_blank" rel="noopener">${L.name}のページで確かめる</a>`:""}</div>` : ""}
     </div>
     <div class="bars">
-      ${barRow("車両価格", man0(eList), pc(eReal), "var(--evl)", sub>0?{hatchPct:pc(sub), hatchLabel:`補助金 −${man0(sub)}`}:{})}
+      ${barRow("車両価格", man0(eList), pc(eReal), "var(--evl)", sub>0?{hatchPct:pc(sub), hatchLabel:`補助金 最大−${man0(sub)}`}:{})}
       ${barRow("実質の価格", man0(eReal), pc(eReal), "var(--ev)", {big:true})}
       ${barRow(rv, man0(gP), pc(gP), "var(--gas)", {vColor:"var(--gas)"})}
     </div>
@@ -296,12 +296,7 @@ screens.cost.update = () => {
   const road = (cls, img, label, v, sub) => `<div class="road ${cls}"><div class="rd-l">${pic(img,26)}<span>${label}</span></div>
       <div class="rd-track"><span class="rd-fill" style="width:${v/kmax*100}%"><span class="rd-car">${pic("car",34)}</span></span></div>
       <div class="rd-v"><b class="num">${v.toFixed(1)}</b><span>km</span></div><small>${sub}</small></div>`;
-  document.getElementById("p2").innerHTML = `<div class="k100hero">
-      <h2 class="k100h">${pic("coin",34)}100円で走れる距離</h2>
-      ${road("g","fuel",rv,r.k100g,`ガソリン ${n("pGas")}円/L・燃費${r.G.fe}km/L`)}
-      ${road("e","plug","EV",r.k100a,S.homeCharge?`自宅${Math.round(n("homeShare"))}%・外で充電`:"外で充電")}
-    </div>
-    <h3 class="ttl2" id="p2t">${dM >= 0 ? `ランニングコストが<br>年 <em class="num">約${man(dM)}</em> <span class="nw">安い</span>` : `ランニングコストが 年 約${man(-dM)} 高い`}</h3>
+  document.getElementById("p2").innerHTML = `<h3 class="ttl2" id="p2t">${dM >= 0 ? `ランニングコストが<br>年 <em class="num">約${man(dM)}</em> <span class="nw">安い</span>` : `ランニングコストが 年 約${man(-dM)} 高い`}</h3>
     <div class="bars">
       <div class="br"><span class="lb">${pic("fuel",26)}<span>${rv}</span></span>${stack(gParts,"var(--gas)")}<span class="v num" style="color:var(--gas)">年${man(gM)}</span></div>
       <div class="br big"><span class="lb" style="color:var(--ev);font-weight:700">${pic("plug",26)}<span>EV</span></span>${stack(eParts,"var(--ev)")}<span class="v num">年${man(eM)}</span></div>
@@ -312,6 +307,11 @@ screens.cost.update = () => {
       ${diffRow(`${pic("yen",22)}税金`,1, `自動車税 年${(r.G.tax-r.E.tax).toLocaleString("ja-JP")}円・重量税 年${(r.G.wt-r.E.wt).toLocaleString("ja-JP")}円の差`)}
       ${diffRow(`${pic("check",22)}メンテ・車検`,2, "エンジンオイル交換などがない（目安）")}
       ${diffRow(`${pic("clipboard",22)}保険`,3, "同じ金額で計算（目安）")}
+    </div>
+    <div class="k100hero">
+      <h2 class="k100h">${pic("coin",34)}100円で走れる距離</h2>
+      ${road("g","fuel",rv,r.k100g,`ガソリン ${n("pGas")}円/L・燃費${r.G.fe}km/L`)}
+      ${road("e","plug","EV",r.k100a,S.homeCharge?`自宅${Math.round(n("homeShare"))}%・外で充電`:"外で充電")}
     </div>
     <p class="note">※ 金額は1年あたり（年${km.toLocaleString("ja-JP")}km${r.drive?"・電費は今日の走りから":""}）。メンテ・保険は目安です</p>`;
 

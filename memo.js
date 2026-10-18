@@ -107,36 +107,55 @@ screens.memo = () => {
   const dA = r.gAnnual - r.eAnnual;   // ランニングコスト（燃料・税金・メンテ・保険）の1年あたりの差
   const ext = memoExtras();
   const asks = MEMO_ASKS.map((q) => `<button type="button" class="lsopt" aria-pressed="${!!S.memoAsks[q.id]}" data-act="memoAsk:${q.id}"><span class="dot" aria-hidden="true"></span><span class="tx"><b>${q.label}</b></span></button>`).join("");
-  const conds = [
-    ["EV", r.E.name], [`比べる${rv}`, r.G.name], ["年間の走行距離", `約${km.toLocaleString("ja-JP")}km`],
-    ["自宅での充電", S.homeCharge ? `できる（${Math.round(n("homeShare"))}%を自宅で）` : "できない"], ["乗る年数", `${r.N}年`],
-    ["EVの電費", r.drive ? `今日の走りから 1kWhで${r.drive.kmPerKwh.toFixed(1)}km` : "カタログ値から"],
-  ];
-  const total = r.diff < 0 ? `${r.N}年で EVが 約${man(-r.diff)} 安い` : `${r.N}年で ${rv}が 約${man(r.diff)} 安い`;
-  return header("相談メモ", "cost", "相談メモ") + `<main class="main" style="gap:18px">
+  const picked = MEMO_ASKS.filter((q) => S.memoAsks[q.id]);
+  const L = r.local.L, st = subsidyStatus();
+  const today = new Date(); const ds = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
+  const cross = r.dInit <= 0 && r.dAnnual >= 0 ? "買った時から" : (r.crossT !== null && r.crossT <= 30 ? `約${r.crossT.toFixed(1)}年目から` : "この条件では安くならない");
+  const total = r.diff < 0 ? `${r.N}年で EV が 約${man(-r.diff)} 安い` : `${r.N}年で ${rv} が 約${man(r.diff)} 安い`;
+  const row = (icon, k, v, sub, hot) => `<div class="rp-row${hot ? " hot" : ""}">${pic(icon, 28)}<span class="rp-k">${k}</span><span class="rp-v"><b class="num">${v}</b>${sub ? `<small>${sub}</small>` : ""}</span></div>`;
+  return header("相談シート", "cost", "相談メモ") + `<main class="main report" style="gap:16px">
     ${S.fromLink ? `<div class="info">共有されたリンクから開いています。数字は送られた条件で計算し直しています。</div>` : ""}
-    <div class="sec memo-top">${pic("clipboard",64)}<div><h1 class="memo-h">聞きたいことを<br>1枚にまとめました</h1><p class="sd" style="margin:0">スタッフに見せるだけでOK。相談は自由です。</p></div></div>
-    <div class="memo-grid">
-      <section class="memo-card">
-        <h2>あなたの試算</h2>
-        <div class="memo-res">
-          <div>${pic("tag",30)}<span class="mr"><span>買うとき</span><b class="num">${r.subTotal > 0 ? `補助金で ${man0(r.subTotal)} 安く` : SUBSIDY.closed ? "国の補助金：受付終了" : "補助金：対象外・未確認"}</b></span></div>
-          <div>${pic("plug",30)}<span class="mr"><span>乗るとき</span><b class="num">${dA >= 0 ? `ランニングコストが 年 約${man(dA)} 安く` : `ランニングコストが 年 約${man(-dA)} 高く`}</b></span></div>
-          <div class="sum">${pic("coin",30)}<span class="mr"><span>合わせると</span><b class="num">${total}</b></span></div>
-        </div>
-        ${r.E.sub > 0 ? `<p class="deadline-line ${subsidyStatus().state}" style="margin:0">${pic("hourglass",22)}${["open","near"].includes(subsidyStatus().state) ? `補助金の受付は${SUBSIDY.endText}まで（見込み）` : subsidyStatus().text}</p>` : ""}
-        ${ext.area || ext.trip || ext.ls ? `<ul class="memo-ext">${[ext.area, ext.trip, ext.ls].filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
-        <dl class="memo-cond">${conds.map(([t, v]) => `<div><dt>${t}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
-        <p class="hint" style="margin:0">価格・燃費・係数の一部は仮の値です。正式な金額は見積もりで確認してください。</p>
-      </section>
-      <section class="memo-card">
-        <h2>${pic("speech",28)} 聞きたいこと</h2><p class="sd" style="margin:0">おすすめに印を付けています</p>
+    <div class="rp-head"><div><span class="rp-shop">Honda Cars 栃木中央 ゆいの杜店</span><h1>EV購入 相談シート</h1><span class="rp-date">${ds} 作成・EV Life Simulator</span></div>${pic("clipboard", 56)}</div>
+
+    <section class="memo-card rp">
+      <h2><i>1</i>お客様の条件</h2>
+      <div class="rp-car">${carPic(r.E, 64)}<div><span>検討中のEV</span><b>${esc(r.E.name)}</b><small>比べる車：${esc(r.G.name)}（${rv}）</small></div></div>
+      <div class="rp-tiles">
+        <div class="big"><span>1年に走る距離</span><b class="num">${km.toLocaleString("ja-JP")}<small>km</small></b></div>
+        <div><span>お住まい</span><b>${L ? esc(L.name) : "―"}</b></div>
+        <div><span>自宅での充電</span><b>${S.homeCharge ? `できる（${Math.round(n("homeShare"))}%）` : "できない"}</b></div>
+        <div><span>乗る年数</span><b>${r.N}年</b></div>
+        <div><span>ガソリン車の燃費</span><b>${r.G.fe}km/L</b></div>
+        <div><span>ガソリン代</span><b>${n("pGas")}円/L</b></div>
+        ${r.drive ? `<div class="wide"><span>EVの電費</span><b>今日の走りから 1kWhで${r.drive.kmPerKwh.toFixed(1)}km</b></div>` : ""}
+      </div>
+    </section>
+
+    <section class="memo-card rp">
+      <h2><i>2</i>シミュレーション結果</h2>
+      <div class="rp-rows">
+        ${row("plug", "ランニングコスト", dA >= 0 ? `年 約${man(dA)} 安い` : `年 約${man(-dA)} 高い`, `${rv} 年${man(r.gAnnual)} → EV 年${man(r.eAnnual)}`)}
+        ${row("coin", "100円で走れる距離", `${r.k100g.toFixed(1)}km → ${r.k100a.toFixed(1)}km`, `${rv} → EV`)}
+        ${row("tag", "補助金", r.subTotal > 0 ? `最大 ${man0(r.subTotal)}` : SUBSIDY.closed ? "国の補助金は受付終了" : "対象外・未確認",
+          `国 ${r.E.sub > 0 ? `最大${man0(r.E.sub)}（${SUBSIDY.endText}まで・見込み）` : "―"}${L ? `／${esc(L.name)} ${r.local.counted ? `最大${man0(r.local.counted)}` : (LOCAL_STATUS_LABEL[L.status] || "")}` : ""}`)}
+        ${row("yen", "トータル", total, `${rv}より安くなるのは ${cross}`, true)}
+      </div>
+      ${ext.area || ext.trip || ext.ls ? `<ul class="memo-ext">${[ext.area, ext.trip, ext.ls].filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
+      <p class="hint" style="margin:0">価格・燃費・メンテ・保険の一部は仮の値・目安です。正式な金額は見積もりで確認してください。</p>
+    </section>
+
+    <section class="memo-card rp">
+      <h2><i>3</i>聞きたいこと <span class="rp-count">${picked.length}件</span></h2>
+      ${picked.length || S.memoNote ? `<ol class="rp-asks">${picked.map((q) => `<li>${q.label}</li>`).join("")}${S.memoNote ? `<li class="note">${esc(S.memoNote)}</li>` : ""}</ol>` : `<p class="hint" style="margin:0">下から選んでください</p>`}
+      <div class="noprint" style="display:flex;flex-direction:column;gap:10px">
+        <p class="sd" style="margin:0">タップで追加・取り消し（おすすめに印を付けています）</p>
         <div class="lsopts">${asks}</div>
         <label class="f">ほかに聞きたいこと<textarea data-q="memoNote" rows="3" placeholder="例：妻の通勤にも使えるか">${esc(S.memoNote)}</textarea></label>
-      </section>
-    </div>
+      </div>
+    </section>
+
     <section class="memo-card noprint">
-      <h2>${pic("phone",28)} 家族に送る・ほかの端末で開く</h2>
+      <h2>${pic("phone",28)} スタッフのPCで開く・家族に送る</h2>
       <div class="memo-share"><div id="qr" class="qr" aria-label="この結果を開くQRコード"></div>
         <div style="display:flex;flex-direction:column;gap:8px;flex-grow:1">
           <p class="hint" style="margin:0">リンクには試算の条件だけが入ります（名前・住所は入りません）</p>
@@ -146,7 +165,7 @@ screens.memo = () => {
           <span class="toast" id="memoMsg" aria-live="polite"></span>
         </div></div>
     </section>
-  </main>` + footer(btn2("rental", "まず乗ってみる（レンタカー）"), btn2("total", "暮らし・おでかけも見る"));
+  </main>` + footer(btn2("cost", "シミュレーション結果に戻る"));
 };
 screens.memo.update = () => drawQR();
 

@@ -111,7 +111,7 @@ function lsMetric(card) {
 
 const lsCtaTarget = (to) => ({
   rental: "rental", trip: "trip",
-  cost: S.gasKey && S.evKey ? "cost" : "ev",
+  cost: "cost",
   area: S.home ? "areamap" : "area",
 }[to] || "home");
 
@@ -121,6 +121,8 @@ Object.assign(ACT, {
   lsTag(id) { S.ls.touched = true; S.ls.sel = { ...S.ls.sel, [id]: !S.ls.sel[id] }; render(true); },
   lsPpl(id) { S.ls.ppl = id; render(true); },
   lsOpen(id) { S.ls.cardId = id; S.ls.carView = null; go("lscard"); },
+  lsOpenFrom(id) { S.ls.from = "cost"; S.ls.cardId = id; S.ls.carView = null; go("lscard"); },
+  lsStart() { S.ls.from = "cost"; go("lifestyle"); },
   lsCar(k) { S.ls.carView = k; render(true); },
   lsCta(to) { go(lsCtaTarget(to)); },
 });
@@ -144,7 +146,7 @@ screens.lifestyle = () => {
   const ppl = PEOPLE().map((p) => `<label><input type="radio" name="lsppl" data-chg="lsPpl:${p.id}"${S.ls.ppl === p.id ? " checked" : ""}>${p.label}</label>`).join("");
   const nScene = TAGS().filter((t) => t.group === "scene" && S.ls.sel[t.id]).length;
   const nCon = TAGS().filter((t) => t.group === "concern" && S.ls.sel[t.id]).length;
-  return header("ライフスタイル", "home", "入力 A") + `<main class="main">
+  return header("ライフスタイル", "cost", "EVライフ") + `<main class="main">
     <div class="hero"><div class="herorow" aria-hidden="true">${pic("camp",56)}${pic("school",48)}${pic("flashlight",48)}</div><h1 style="font-size:22px">あなたの毎日に、<br>EVはどう役立つ？</h1></div>
     <section class="sec"><h2>自宅で充電できますか</h2><p class="sd">コスト比較とマップにも使います</p><div class="lsopts" role="group" aria-label="自宅で充電できるか">${homes}</div></section>
     <section class="sec"><h2>よくある場面</h2><p class="sd">いくつでも選べます</p><div class="chips">${chips("scene")}</div>
@@ -179,7 +181,7 @@ screens.effect = () => {
     ${top.map((c, i) => lsCardHtml(c, i === 0)).join("")}
     ${rest.length ? `<details><summary>ほかの使い方（${rest.length}）</summary><div class="body">${rest.map((c) => `<button type="button" class="lk" style="margin:0;justify-content:flex-start" data-act="lsOpen:${esc(c.id)}">${esc(c.title)}</button>`).join("")}</div></details>` : ""}
     <p class="hint">数字は、コスト比較の電費・電気代の設定で計算した目安です。試算のEV：${esc(carForMap().name)}${carForMap().isDefault ? "（未選択のため仮）" : ""}</p>
-  </main>` + footer(btn("total", "トータル結果へ"), btn2("rental", "EVレンタカーで体験する"));
+  </main>` + footer(btn("cost", "シミュレーション結果に戻る"));
 };
 
 /* =========================================================
@@ -189,7 +191,8 @@ screens.lscard = () => {
   const list = lsRanked();
   let i = list.findIndex((c) => c.id === S.ls.cardId);
   const c = i >= 0 ? list[i] : CARDS().find((x) => x.id === S.ls.cardId);
-  if (!c) return header("提案カード", "effect", "") + `<main class="main"><p class="info">カードが見つかりませんでした。</p></main>` + footer(btn("effect", "一覧に戻る"));
+  const back = S.ls.from === "cost" && !S.ls.seen ? "cost" : "effect";
+  if (!c) return header("提案カード", back, "") + `<main class="main"><p class="info">カードが見つかりませんでした。</p></main>` + footer(btn("effect", "一覧に戻る"));
   const m = lsMetric(c);
   const reasons = (c.reasons || []).map((r) => `<span class="bdg ok">${esc(r)}</span>`).join("");
   let cars = "";
@@ -201,7 +204,7 @@ screens.lscard = () => {
       <p class="warnbox" style="margin:0">${esc(c.carNotes[cur] || c.carNotes.default || "")}</p></section>`;
   }
   const prev = i > 0 ? list[i - 1] : null, next = i >= 0 && i < list.length - 1 ? list[i + 1] : null;
-  return header("提案カード", "effect", i >= 0 ? `${i + 1} / ${list.length}` : "") + `<main class="main">
+  return header("提案カード", back, i >= 0 ? `${i + 1} / ${list.length}` : "") + `<main class="main">
     ${c.image ? `<img src="${esc(c.image)}" alt="" style="width:100%;height:180px;object-fit:cover;border-radius:14px">` : `<div class="lsic big">${lsIcon(c.icon, true)}</div>`}
     <div class="sec">${reasons ? `<div class="badges" style="font-size:12px">${reasons}</div>` : ""}
       <h1 style="font-size:22px">${esc(c.title)}</h1>
@@ -212,7 +215,8 @@ screens.lscard = () => {
     ${c.draft ? '<p class="hint">このカードの内容は仮です。チームで確認中です。</p>' : ""}
   </main>` + footer(
     c.cta ? `<button class="btn" data-act="lsCta:${c.cta.to}">${esc(c.cta.label || "次へ")}</button>` : "",
-    `<div class="row2"><button class="btn2" ${prev ? `data-act="lsOpen:${esc(prev.id)}"` : "disabled style=\"opacity:.4\""}>前のカード</button><button class="btn2" ${next ? `data-act="lsOpen:${esc(next.id)}"` : "disabled style=\"opacity:.4\""}>次のカード</button></div>`
+    btn2("cost", "シミュレーション結果に戻る"),
+    i < 0 ? "" : `<div class="row2"><button class="btn2" ${prev ? `data-act="lsOpen:${esc(prev.id)}"` : "disabled style=\"opacity:.4\""}>前のカード</button><button class="btn2" ${next ? `data-act="lsOpen:${esc(next.id)}"` : "disabled style=\"opacity:.4\""}>次のカード</button></div>`
   );
 };
 
@@ -234,18 +238,18 @@ function tileA() {
    結果画面の「値段だけじゃない、EVとガソリン車の違い」
    場面を選んでいればその提案の上位、まだなら代表的なカードを出す
    ========================================================= */
-const EVLIFE_DEFAULT = ["no-gas-station", "wait-ac", "power-outage", "quiet-ride", "full-every-morning", "camp-power"];
+const EVLIFE_DEFAULT = ["full-every-morning", "smooth-start", "wait-ac", "power-outage"];   // 毎朝満充電・坂道や合流・アイドリングなし・災害時
 function evLifeHtml() {
   const ok = (c) => { const q = c.requires || {}; return !(q.homeCharge === true && !S.homeCharge) && !(q.homeCharge === false && S.homeCharge); };
-  const ranked = S.ls.seen ? lsRanked() : [];
-  const list = (ranked.length ? ranked : EVLIFE_DEFAULT.map((id) => CARDS().find((c) => c.id === id)).filter((c) => c && ok(c))).slice(0, 4);
+  const ranked = [];
+  const list = EVLIFE_DEFAULT.map((id) => CARDS().find((c) => c.id === id)).filter((c) => c && ok(c)).slice(0, 4);
   if (!list.length) return "";
   const card = (c) => { const m = lsMetric(c);
-    return `<button type="button" class="elcard" data-act="lsOpen:${esc(c.id)}"><span class="el-pic">${lsIcon(c.icon, true)}</span>
+    return `<button type="button" class="elcard" data-act="lsOpenFrom:${esc(c.id)}"><span class="el-pic">${lsIcon(c.icon, true)}</span>
       <span class="el-tx"><b>${esc(c.title)}</b><span>${esc(c.body)}</span>${m && m.value ? `<span class="el-m"><small>${esc(m.label)}</small><em class="num">${esc(m.value)}</em></span>` : ""}</span></button>`; };
   return `<div class="el-head">${pic("sparkles",36)}<div><h2>値段だけじゃない、<br>EVとガソリン車の違い</h2><p>${ranked.length ? "あなたが選んだ場面に合う使い方" : "EVのある毎日で変わること"}</p></div></div>
     <div class="el-list">${list.map(card).join("")}</div>
-    <button class="btn2" data-go="lifestyle">${ranked.length ? "場面を選び直す" : "自分に合う使い方を探す"}</button>`;
+    <button class="btn2" data-act="lsStart">自分に合う使い方をもっと探す</button>`;
 }
 
 /* ---------- 起動 ---------- */
