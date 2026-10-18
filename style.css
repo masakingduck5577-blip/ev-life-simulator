@@ -628,3 +628,71 @@ table{color:var(--ink)}
   .st-grid b{font-size:18px;text-align:right}
 }
 .st-grid b{white-space:nowrap}
+
+/* ===== 100円で走れる距離（いちばん目立たせる） ===== */
+.k100hero{display:flex;flex-direction:column;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.k100h{display:flex;align-items:center;gap:8px;font-size:26px;color:#fff;margin:0;padding-right:0}
+.road{display:grid;grid-template-columns:96px minmax(0,1fr) auto;grid-template-rows:auto auto;gap:2px 10px;align-items:center}
+.rd-l{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:var(--sub)}
+.road.e .rd-l{color:#FF6B6F}
+.rd-track{position:relative;height:30px;border-radius:8px;background:#2A2B30;background-image:repeating-linear-gradient(90deg,#55575E 0 10px,transparent 10px 20px);background-size:100% 2px;background-position:0 50%;background-repeat:no-repeat}
+.rd-fill{position:absolute;left:0;top:0;bottom:0;border-radius:8px;background:rgba(154,161,170,.35)}
+.road.e .rd-fill{background:rgba(232,56,61,.45)}
+.rd-car{position:absolute;right:-14px;top:50%;transform:translateY(-58%)}
+.road.g .rd-car .pic{filter:grayscale(1) brightness(1.1)}
+.rd-v{display:flex;align-items:baseline;gap:2px;min-width:92px;justify-content:flex-end}
+.rd-v b{font-size:34px;line-height:1;color:#fff}
+.road.e .rd-v b{color:#FF4A4F;font-size:42px}
+.rd-v span{font-size:14px;font-weight:700;color:var(--sub)}
+.road small{grid-column:2/4;font-size:11px;color:var(--sub)}
+.ttl2{font-size:19px;color:#fff;margin:4px 0 0;line-height:1.5}
+.ttl2 em{font-style:normal;color:#FF4A4F;font-size:30px}
+.note{margin:0;font-size:11px;color:var(--sub)}
+
+/* ===== 補助金（国＋市町） ===== */
+.cityrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-radius:14px;background:var(--panel2);font-size:13px;font-weight:700;color:var(--ink)}
+.cityrow span{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.cityrow select{height:40px;width:auto;min-width:130px;font-size:15px;font-weight:700;border-radius:999px;padding:0 14px;background:#1A1B1F}
+.cityrow select:hover,.cityrow select:focus{border-color:#E0352F}
+.subrows{display:flex;flex-direction:column;gap:8px}
+.subrow{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:14px;background:var(--panel2)}
+.sr-h{display:flex;align-items:center;gap:8px}
+.sr-h b{font-size:14px;color:#fff}
+.sr-h em{margin-left:auto;font-style:normal;font-weight:700;font-size:20px;color:#FF4A4F;white-space:nowrap}
+.sr-h em.off{color:var(--sub);text-decoration:line-through;font-size:16px}
+.sr-d{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink)}
+.sr-n{font-size:11px;color:var(--sub)}
+.sr-n.warn{color:var(--warn)}
+.sr-l{font-size:12px;font-weight:700}
+.sbadge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.sbadge.open{background:var(--ok-t);color:var(--ok)}
+.sbadge.soon{background:var(--warn-t);color:var(--warn)}
+.sbadge.closed,.sbadge.none{background:#33353B;color:var(--sub)}
+.sbadge.check{background:var(--warn-t);color:var(--warn)}
+
+/* ===== 詳細の開閉（矢印と、カーソルを合わせたら赤い縁） ===== */
+details{transition:border-color .15s}
+details:hover{border-color:#E0352F}
+details>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px}
+details>summary::-webkit-details-marker{display:none}
+details>summary::after{content:"";flex-shrink:0;width:9px;height:9px;border-right:2.5px solid #FF6B6F;border-bottom:2.5px solid #FF6B6F;transform:rotate(45deg);margin:0 6px 4px 0;transition:transform .2s}
+details[open]>summary::after{transform:rotate(-135deg);margin-bottom:-4px}
+details.mini{border:0;background:transparent;padding:0}
+details.mini:hover summary{color:#FF6B6F}
+details.mini>summary{justify-content:flex-start}
+@media (min-width:960px){ .k100h{font-size:30px} .rd-v b{font-size:40px} .road.e .rd-v b{font-size:50px} .road{grid-template-columns:120px minmax(0,1fr) auto} }
+.nw{white-space:nowrap}
+.ttl2 em,.pillar .ttl em{white-space:nowrap}
+.sr-h em.na{color:var(--sub);font-size:14px}
+.rd-car{right:2px}
+.road.g .rd-l span{white-space:nowrap}
+@media (max-width:959px){
+  .road{grid-template-columns:84px minmax(0,1fr) auto;gap:2px 8px}
+  .rd-l{font-size:12px}
+  .rd-v{min-width:0}
+  .rd-v b{font-size:30px}
+  .road.e .rd-v b{font-size:36px}
+  .k100h{font-size:23px}
+  .ttl2 em{font-size:28px}
+}
+@media (max-width:959px){ .road{grid-template-columns:92px minmax(0,1fr) auto} .rd-l{gap:2px;font-size:11.5px} .rd-l .pic{width:20px;height:20px} }

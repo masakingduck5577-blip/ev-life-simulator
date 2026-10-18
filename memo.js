@@ -120,7 +120,7 @@ screens.memo = () => {
       <section class="memo-card">
         <h2>あなたの試算</h2>
         <div class="memo-res">
-          <div>${pic("tag",30)}<span class="mr"><span>買うとき</span><b class="num">${r.E.sub > 0 ? `補助金で ${man0(r.E.sub)} 安く` : SUBSIDY.closed ? "国の補助金：受付終了" : "補助金：対象外・未確認"}</b></span></div>
+          <div>${pic("tag",30)}<span class="mr"><span>買うとき</span><b class="num">${r.subTotal > 0 ? `補助金で ${man0(r.subTotal)} 安く` : SUBSIDY.closed ? "国の補助金：受付終了" : "補助金：対象外・未確認"}</b></span></div>
           <div>${pic("plug",30)}<span class="mr"><span>乗るとき</span><b class="num">${dA >= 0 ? `ランニングコストが 年 約${man(dA)} 安く` : `ランニングコストが 年 約${man(-dA)} 高く`}</b></span></div>
           <div class="sum">${pic("coin",30)}<span class="mr"><span>合わせると</span><b class="num">${total}</b></span></div>
         </div>
@@ -155,7 +155,7 @@ const S_DEFAULT = JSON.parse(JSON.stringify(S));
 const SHARE_KEYS = ["rivalType", "gasKey", "evKey", "kmMode", "annualKm", "monthlySpend", "curFe",
   "gc_price", "gc_fe", "gc_tax", "gc_wt", "ec_price", "ec_sub", "ec_wh", "ec_kwh", "ec_tax", "ec_wt",
   "homeCharge", "homeShare", "years", "evAdj", "gasAdj", "evFees", "gasFees",
-  "pGas", "pHome", "pPub", "charger", "mGas", "mEv", "insGas", "insEv", "gFe", "cSum", "cWin", "rGas", "rEv", "usable", "scen",
+  "pGas", "pHome", "pPub", "charger", "mGas", "mEv", "insGas", "insEv", "gFe", "city", "cSum", "cWin", "rGas", "rEv", "usable", "scen",
   "dCar", "dKm", "dSoc0", "dSoc1", "dSeason", "dUse", "memoAsks", "memoNote"];
 const b64e = (s) => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 const b64d = (s) => decodeURIComponent(escape(atob(s.replace(/-/g, "+").replace(/_/g, "/"))));

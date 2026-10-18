@@ -5,10 +5,10 @@
    acKw: 普通充電で受け入れられる最大出力（kW）※仮置き・要確認
    ========================================================= */
 const EVS = {
-  "n-one-e":  {rival:"n-one", pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", range:295, name:"N-ONE e:（e:G）", cat:"軽乗用EV", price:2699400, sub:580000, wh:105, kwh:29.6, tax:10800, wt:0, qkw:50, acKw:6, ok:true},
+  "n-one-e":  {kei:true, rival:"n-one", pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", range:295, name:"N-ONE e:（e:G）", cat:"軽乗用EV", price:2699400, sub:580000, wh:105, kwh:29.6, tax:10800, wt:0, qkw:50, acKw:6, ok:true},
   "super-one":{rival:"fit-gas", pic:"car", seats:"4人", size:"小型", use:"走りを楽しむ", range:274, name:"Super-ONE", cat:"小型EV", price:3390200, sub:1300000, wh:113, kwh:29.6, tax:25000, wt:0, qkw:50, acKw:6, ok:false},
   "insight":  {rival:"zrv-gas", pic:"suv", seats:"5人", size:"SUV", use:"家族で遠出", range:535, name:"INSIGHT", cat:"クロスオーバーSUV EV", price:5500000, sub:1300000, wh:134, kwh:68.8, tax:25000, wt:0, qkw:150, acKw:6, ok:true},
-  "n-van-e":  {rival:"n-van", pic:"van", seats:"1〜4人（グレードによる）", size:"軽バン", use:"仕事・趣味の荷物", range:245, name:"N-VAN e:", cat:"軽商用EV", price:2600000, sub:580000, wh:126, kwh:29.6, tax:5000, wt:0, qkw:50, acKw:6, ok:false},
+  "n-van-e":  {kei:true, rival:"n-van", pic:"van", seats:"1〜4人（グレードによる）", size:"軽バン", use:"仕事・趣味の荷物", range:245, name:"N-VAN e:", cat:"軽商用EV", price:2600000, sub:580000, wh:126, kwh:29.6, tax:5000, wt:0, qkw:50, acKw:6, ok:false},
   "custom":   {name:"その他のEV", cat:"スペックを入力", custom:true}
 };
 /* rival：比べる「同じクラスのガソリン車」（GASES の名前）。画面では車を選ばせず、ここで自動で決める
