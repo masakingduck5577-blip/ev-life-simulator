@@ -273,16 +273,16 @@ screens.map = () => {
   const car = carForMap();
   const card = (to, ic, icBg, icFg, t, s, d, tags, strong) => `<button type="button" class="hcard" data-go="${to}" style="flex-direction:column;align-items:stretch;gap:10px;${strong ? "border:1.5px solid var(--ev)" : ""}">
     <span style="display:flex;align-items:center;gap:12px"><span class="lt" style="background:${icBg};color:${icFg}">${ic}</span><span class="tx"><span class="t">${t}</span><span class="d">${s}</span></span></span>
-    <span style="font-size:14px;line-height:1.7">${d}</span>
+    ${d ? `<span style="font-size:14px;line-height:1.7">${d}</span>` : ""}
     <span class="badges">${tags.map((x) => `<span class="bdg mute" style="background:var(--bg)">${x}</span>`).join("")}</span></button>`;
   const ICON_HOME = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>';
   const ICON_PIN = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
   return header("生活圏・おでかけ", "home", "C マップ") + `<main class="main">
-    <div class="hero"><h1>EVのある移動を、<br>地図で確かめる</h1><p>いつもの暮らしと、遠出。2つのモードで、行ける範囲と充電する場所がわかります。</p></div>
-    ${card("area", ICON_HOME, "var(--ev-t)", "var(--ev)", "生活圏モード", "毎日の暮らしで使う", "自宅・職場・よく行く場所を登録すると、その周りと行き来する道にある充電施設やEVで得する施設を表示します。", ["行ける判定（夏・冬）", "充電施設", "EVメリット施設", "年間走行距離の推定"], true)}
-    ${card("trip", ICON_PIN, "var(--gas-t)", "var(--gas)", "旅行モード", "遠出・旅行を試す", "目的地を決めると、航続距離で行けるか、途中と目的地の充電施設、充電費用の目安がわかります。", ["航続距離", "経路の充電施設", "目的地の充電施設", "充電費用"], false)}
+    <div class="hero"><div class="herorow" aria-hidden="true">${pic("map",64)}${pic("plug",48)}</div><h1>充電して、<br>どこまで行ける？</h1></div>
+    ${card("area", pic("house", 40), "transparent", "var(--ev)", "いつもの暮らし", "家・職場・よく行く場所", "", ["夏・冬で行ける？", "近くの充電"], true)}
+    ${card("trip", pic("onsen", 40), "transparent", "var(--gas)", "おでかけ・旅行", "日光・那須など", "", ["途中の充電", "充電代"], false)}
     <div class="compare" style="background:var(--bg)"><div><div class="k" style="color:var(--sub)">試算に使うEV${car.isDefault ? "（未選択のため仮）" : "（車両情報 B から）"}</div><div class="n">${esc(car.name)}</div></div><button class="lk" data-go="ev" style="margin:0">変更</button></div>
-    <button type="button" class="hcard" data-go="chargers"><span class="lt" style="background:#C8102E;color:#fff">H</span><span class="tx"><span class="t">充電施設の一覧</span><span class="d">${chgMetaText()}</span></span><span style="color:var(--sub)">${CHEV_R}</span></button>
+    <button type="button" class="hcard" data-go="chargers"><span class="hpic">${pic("plug",40)}</span><span class="tx"><span class="t">充電施設の一覧</span><span class="d">${chgMetaText()}</span></span><span style="color:var(--sub)">${CHEV_R}</span></button>
     <p class="hint">地図データ © OpenStreetMap contributors</p>
   </main>`;
 };
@@ -647,10 +647,10 @@ screens.tripplan = () => {
 function tileC() {
   const A = S.area?.status === "done" ? S.area.data : null;
   const R = S.tripRes?.status === "done" ? S.tripRes.data : null;
-  if (!A && !R) return `<div class="tile"><div class="h"><span class="lt">C</span><span class="ht">生活圏・おでかけ</span></div><div class="big">まだ入力されていません</div><div class="links"><button class="lk" data-go="map">場所を登録する</button></div></div>`;
+  if (!A && !R) return `<div class="tile"><div class="h">${pic("map",32)}<span class="ht">生活圏・おでかけ</span></div><div class="big">まだ入力されていません</div><div class="links"><button class="lk" data-go="map">場所を登録する</button></div></div>`;
   const big = A ? (S.homeCharge ? `移動の${Math.round(A.coverPct)}%を、冬でも自宅の充電で` : `外での充電は週${A.chargesWeek.toFixed(1)}回ほど`) : "";
   const tripTxt = R ? `旅行：${esc(S.trip.dest.label)}まで ${!R.plan.outbound.ok ? "充電先が見つからない区間あり" : R.plan.outbound.stops.length ? `途中${R.plan.outbound.stops.length}回の充電で到着` : "充電なしで到着"}` : "";
-  return `<div class="tile"><div class="h"><span class="lt">C</span><span class="ht">生活圏・おでかけ</span></div>
+  return `<div class="tile"><div class="h">${pic("map",32)}<span class="ht">生活圏・おでかけ</span></div>
     ${big ? `<div class="big">${big}</div>` : ""}
     <div class="s">${A ? `週 約${Math.round(A.weekKm)}km・登録した場所 ${A.targets.length}か所` : ""}${A && R ? "<br>" : ""}${tripTxt}</div>
     <div class="links">${A ? '<button class="lk" data-go="areamap">生活圏マップ</button>' : ""}${R ? '<button class="lk" data-go="tripres">旅行の結果</button>' : '<button class="lk" data-go="trip">旅行を試す</button>'}</div></div>`;

@@ -49,6 +49,7 @@ EVを買う前に「買った後の暮らしとお金」をイメージするた
 | `chargers.js` / `chargers.csv` | **自動で作られる**。充電施設の一覧（OpenStreetMap） | （GitHub Actions） |
 | `update_subsidy.py` / `update_chargers.py` | 上の2つを作るプログラム | ロジック担当 |
 | `.github/workflows/update-data.yml` | 自動で動かす設定 | ― |
+| `images.js` | イラスト素材（Fluent Emoji 3D、MIT） | ― |
 | `lifestyle.js` | ライフスタイルの画面とカードの並べ替え・数字の計算（**最後に読み込む**） | ― |
 
 ## 提案カードの追加
@@ -140,6 +141,13 @@ EVを買う前に「買った後の暮らしとお金」をイメージするた
 - 目的地で充電できると入力され、施設データがない場合は普通充電6kWを想定
 - 寄り道の距離：経路からの直線距離 × 1.3 × 往復
 - 標高差は考えていません（日光・那須など上り坂の行き先は、実際は行きの消費が増えます）
+
+## イラスト・写真
+
+- 画面のイラストは **Microsoft Fluent Emoji（3D）**（© Microsoft Corporation、MITライセンス、https://github.com/microsoft/fluentui-emoji）を使っています。`images.js` にまとめて入れているので、フォルダは増えません
+- 新しいイラストを足すときは、同じ素材から選んで `images.js` に追加します（名前で `pic("car", 48)` のように呼び出す）
+- 実際の車の写真を使うときは、`cars.js` の車種に `photo:"n-one-e.jpg"` を足し、写真ファイルを同じ場所に置きます。写真があればイラストの代わりに表示します
+- Hondaの公式サイトの写真は、許可なく使わないでください
 
 ## 外部サービスの利用について
 

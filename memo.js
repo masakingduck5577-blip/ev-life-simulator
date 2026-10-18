@@ -34,17 +34,17 @@ function driveForCalc() {
 screens.drive = () => {
   const evs = Object.entries(EVS).filter(([k, d]) => !d.custom);
   return header("今日の走り", "home", "レンタカー返却時") + `<main class="main">
-    <div class="hero"><h1 style="font-size:22px">今日の走りから、<br>あなたの電費を出す</h1><p>返却時のメーターと電池の残量を入れてください。分からなければスタッフに聞いてください。</p></div>
+    <div class="hero"><div class="herorow" aria-hidden="true">${pic("key",56)}${pic("battery",56)}</div><h1 style="font-size:22px">今日の走りから、<br>あなたの電費を出す</h1><p>メーターの数字を入れるだけ。分からなければスタッフへ。</p></div>
     <section class="sec"><h2>乗った車</h2>
       <label class="f">車種<select data-k="dCar">${evs.map(([k, d]) => `<option value="${k}"${S.dCar === k ? " selected" : ""}>${esc(d.name)}</option>`).join("")}</select></label></section>
-    <section class="sec"><h2>走った距離</h2><p class="sd">返却時のメーター − 貸し出し時のメーター</p>
+    <section class="sec"><h2>${pic("road",28)} 走った距離</h2>
       <label class="f">距離（km）<input type="number" inputmode="decimal" data-k="dKm" value="${esc(S.dKm)}" min="0" step="1" placeholder="例：48"></label></section>
-    <section class="sec"><h2>電池の残量</h2>
+    <section class="sec"><h2>${pic("battery",28)} 電池の残量</h2>
       <div class="row2"><label class="f">貸し出し時（%）<input type="number" inputmode="decimal" data-k="dSoc0" value="${esc(S.dSoc0)}" min="0" max="100" step="1" placeholder="例：90"></label>
       <label class="f">返却時（%）<input type="number" inputmode="decimal" data-k="dSoc1" value="${esc(S.dSoc1)}" min="0" max="100" step="1" placeholder="例：72"></label></div></section>
-    <section class="sec"><h2>季節</h2><p class="sd">エアコンの使い方で電費が変わるので、春・秋の条件に直して計算します</p>
-      <div class="seg" style="grid-template-columns:repeat(3,minmax(0,1fr))" role="radiogroup" aria-label="季節">
-        ${["mid", "sum", "win"].map((s) => `<label><input type="radio" name="dSeason" data-k="dSeason" value="${s}"${S.dSeason === s ? " checked" : ""}>${SEASON_LABEL[s]}</label>`).join("")}
+    <section class="sec"><h2>季節</h2>
+      <div class="seg segpic" style="grid-template-columns:repeat(3,minmax(0,1fr))" role="radiogroup" aria-label="季節">
+        ${["mid", "sum", "win"].map((s) => `<label><input type="radio" name="dSeason" data-k="dSeason" value="${s}"${S.dSeason === s ? " checked" : ""}>${pic({ mid: "seedling", sum: "sun", win: "snow" }[s], 24)}${SEASON_LABEL[s]}</label>`).join("")}
       </div></section>
     <div id="dres" aria-live="polite"></div>
   </main>` + footer(`<button class="btn" id="dgo" data-act="driveApply">この電費でコストを比べる</button>`, btn2("gas", "カタログの電費で比べる"));
@@ -115,31 +115,31 @@ screens.memo = () => {
   const total = r.diff < 0 ? `${r.N}年で 約${man(-r.diff)} おトク` : `${r.N}年では${rv}が 約${man(r.diff)} 安い`;
   return header("相談メモ", "cost", "相談メモ") + `<main class="main" style="gap:18px">
     ${S.fromLink ? `<div class="info">共有されたリンクから開いています。数字は送られた条件で計算し直しています。</div>` : ""}
-    <div class="sec"><h1 class="memo-h">販売店で聞きたいことを、<br>1枚にまとめました</h1><p class="sd" style="margin:0">この画面をスタッフに見せてください。相談するかどうかは自由です。</p></div>
+    <div class="sec memo-top">${pic("clipboard",64)}<div><h1 class="memo-h">聞きたいことを<br>1枚にまとめました</h1><p class="sd" style="margin:0">スタッフに見せるだけでOK。相談は自由です。</p></div></div>
     <div class="memo-grid">
       <section class="memo-card">
         <h2>あなたの試算</h2>
         <div class="memo-res">
-          <div><span>1 買うとき</span><b class="num">${r.E.sub > 0 ? `補助金で ${man0(r.E.sub)} 安く` : SUBSIDY.closed ? "国の補助金：受付終了" : "補助金：対象外・未確認"}</b></div>
-          <div><span>2 乗るとき</span><b class="num">${dM >= 0 ? `燃料代が 月 約${yen100(dM)} 安く` : `燃料代が 月 約${yen100(dM)} 高く`}</b></div>
-          <div class="sum"><span>合わせると</span><b class="num">${total}</b></div>
+          <div>${pic("tag",30)}<span class="mr"><span>買うとき</span><b class="num">${r.E.sub > 0 ? `補助金で ${man0(r.E.sub)} 安く` : SUBSIDY.closed ? "国の補助金：受付終了" : "補助金：対象外・未確認"}</b></span></div>
+          <div>${pic("plug",30)}<span class="mr"><span>乗るとき</span><b class="num">${dM >= 0 ? `燃料代が 月 約${yen100(dM)} 安く` : `燃料代が 月 約${yen100(dM)} 高く`}</b></span></div>
+          <div class="sum">${pic("coin",30)}<span class="mr"><span>合わせると</span><b class="num">${total}</b></span></div>
         </div>
-        ${r.E.sub > 0 ? `<p class="deadline-line ${subsidyStatus().state}" style="margin:0">補助金：${subsidyStatus().text}（${SUBSIDY.applyRule}）</p>` : ""}
+        ${r.E.sub > 0 ? `<p class="deadline-line ${subsidyStatus().state}" style="margin:0">${pic("hourglass",22)}${["open","near"].includes(subsidyStatus().state) ? `補助金の受付は${SUBSIDY.endText}まで（見込み）` : subsidyStatus().text}</p>` : ""}
         ${ext.area || ext.trip || ext.ls ? `<ul class="memo-ext">${[ext.area, ext.trip, ext.ls].filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
         <dl class="memo-cond">${conds.map(([t, v]) => `<div><dt>${t}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
         <p class="hint" style="margin:0">価格・燃費・係数の一部は仮の値です。正式な金額は見積もりで確認してください。</p>
       </section>
       <section class="memo-card">
-        <h2>聞きたいこと</h2><p class="sd" style="margin:0">あなたの試算から、おすすめに印を付けています。自由に変えてください。</p>
+        <h2>${pic("speech",28)} 聞きたいこと</h2><p class="sd" style="margin:0">おすすめに印を付けています</p>
         <div class="lsopts">${asks}</div>
         <label class="f">ほかに聞きたいこと<textarea data-q="memoNote" rows="3" placeholder="例：妻の通勤にも使えるか">${esc(S.memoNote)}</textarea></label>
       </section>
     </div>
     <section class="memo-card noprint">
-      <h2>スタッフのPCで開く・家族に送る</h2>
+      <h2>${pic("phone",28)} 家族に送る・ほかの端末で開く</h2>
       <div class="memo-share"><div id="qr" class="qr" aria-label="この結果を開くQRコード"></div>
         <div style="display:flex;flex-direction:column;gap:8px;flex-grow:1">
-          <p class="hint" style="margin:0">QRコードかリンクで、同じ結果をほかの端末で開けます。リンクに含まれるのは試算の条件だけで、名前や住所は含みません。</p>
+          <p class="hint" style="margin:0">リンクには試算の条件だけが入ります（名前・住所は入りません）</p>
           <button class="btn2" data-act="memoCopy">リンクをコピー</button>
           ${navigator.share ? '<button class="btn2" data-act="memoShare">LINEなどで送る</button>' : ""}
           <button class="btn2" data-act="memoPrint">印刷・PDFで保存</button>

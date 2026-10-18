@@ -24,7 +24,10 @@ const LS_ICONS = {
   paw: '<circle cx="7" cy="9" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="17" cy="9" r="2"/><path d="M8 17c0-3 2-5 4-5s4 2 4 5-2 3-4 3-4 0-4-3z"/>',
   yen: '<path d="M6 4l6 8 6-8"/><path d="M12 12v8"/><path d="M8 13h8"/><path d="M8 17h8"/>',
 };
-const lsIcon = (k) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LS_ICONS[k] || LS_ICONS.battery}</svg>`;
+const LS_PIC = { ac: "snow", fuel: "fuel", power: "flashlight", quiet: "sleep", battery: "battery", tent: "camp", road: "road", wheel: "dash", leaf: "seedling", paw: "dog", yen: "yen" };
+const TAG_PIC = { pickup: "school", commute: "office", shopping: "shop", wait: "hourglass", outdoor: "camp", longtrip: "road", pet: "dog", fuel: "fuel", smell: "fuel", quiet: "shh", disaster: "storm", fun: "dash", eco: "seedling" };
+const lsIcon = (k, big) => (window.IMG && IMG[LS_PIC[k]]) ? pic(LS_PIC[k], big ? 64 : 36) : lsIconSvg(k);
+const lsIconSvg = (k) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LS_ICONS[k] || LS_ICONS.battery}</svg>`;
 
 /* ---------- 場面の自動選択（マップに登録した場所から） ---------- */
 function lsAutoSelect() {
@@ -136,13 +139,13 @@ screens.lifestyle = () => {
     ["unknown", "まだわからない", "設置できる前提で、ひとまず提案します"],
   ].map(([id, l, s]) => `<button type="button" class="lsopt" aria-pressed="${S.ls.home === id}" data-act="lsHome:${id}">
       <span class="dot" aria-hidden="true"></span><span class="tx"><b>${l}</b><span>${s}</span></span></button>`).join("");
-  const chips = (group) => TAGS().filter((t) => t.group === group).map((t) => `<button type="button" class="chip lschip" aria-pressed="${!!S.ls.sel[t.id]}" data-act="lsTag:${t.id}">${S.ls.sel[t.id] ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>' : ""}${esc(t.label)}</button>`).join("");
+  const chips = (group) => TAGS().filter((t) => t.group === group).map((t) => `<button type="button" class="chip lschip" aria-pressed="${!!S.ls.sel[t.id]}" data-act="lsTag:${t.id}">${pic(TAG_PIC[t.id] || "sparkles", 24)}${esc(t.label)}</button>`).join("");
   const autoLabels = S.ls.auto.map((id) => (TAGS().find((t) => t.id === id) || {}).label).filter(Boolean);
   const ppl = PEOPLE().map((p) => `<label><input type="radio" name="lsppl" data-chg="lsPpl:${p.id}"${S.ls.ppl === p.id ? " checked" : ""}>${p.label}</label>`).join("");
   const nScene = TAGS().filter((t) => t.group === "scene" && S.ls.sel[t.id]).length;
   const nCon = TAGS().filter((t) => t.group === "concern" && S.ls.sel[t.id]).length;
   return header("ライフスタイル", "home", "入力 A") + `<main class="main">
-    <div class="hero"><h1 style="font-size:22px">あなたの毎日に、<br>EVはどう役立つ？</h1><p>当てはまる場面を選ぶと、あなたに合うEVの使い方を提案します。</p></div>
+    <div class="hero"><div class="herorow" aria-hidden="true">${pic("camp",56)}${pic("school",48)}${pic("flashlight",48)}</div><h1 style="font-size:22px">あなたの毎日に、<br>EVはどう役立つ？</h1></div>
     <section class="sec"><h2>自宅で充電できますか</h2><p class="sd">コスト比較とマップにも使います</p><div class="lsopts" role="group" aria-label="自宅で充電できるか">${homes}</div></section>
     <section class="sec"><h2>よくある場面</h2><p class="sd">いくつでも選べます</p><div class="chips">${chips("scene")}</div>
       ${autoLabels.length ? `<p class="info" style="display:flex;gap:8px;align-items:flex-start"><span aria-hidden="true" style="color:var(--ev)">●</span>「${autoLabels.join("」「")}」は、生活圏に登録した場所から選んでいます</p>` : ""}</section>
@@ -199,7 +202,7 @@ screens.lscard = () => {
   }
   const prev = i > 0 ? list[i - 1] : null, next = i >= 0 && i < list.length - 1 ? list[i + 1] : null;
   return header("提案カード", "effect", i >= 0 ? `${i + 1} / ${list.length}` : "") + `<main class="main">
-    ${c.image ? `<img src="${esc(c.image)}" alt="" style="width:100%;height:180px;object-fit:cover;border-radius:14px">` : `<div class="lsic big">${lsIcon(c.icon)}</div>`}
+    ${c.image ? `<img src="${esc(c.image)}" alt="" style="width:100%;height:180px;object-fit:cover;border-radius:14px">` : `<div class="lsic big">${lsIcon(c.icon, true)}</div>`}
     <div class="sec">${reasons ? `<div class="badges" style="font-size:12px">${reasons}</div>` : ""}
       <h1 style="font-size:22px">${esc(c.title)}</h1>
       <p style="margin:0;font-size:14px;line-height:1.8">${esc(c.detail || c.body)}</p></div>
@@ -218,9 +221,9 @@ screens.lscard = () => {
    ========================================================= */
 function tileA() {
   const list = S.ls.seen ? lsRanked() : [];
-  if (!list.length) return `<div class="tile"><div class="h"><span class="lt">A</span><span class="ht">暮らしの変化</span></div><div class="big">まだ選ばれていません</div><div class="links"><button class="lk" data-go="lifestyle">場面を選ぶ</button></div></div>`;
+  if (!list.length) return `<div class="tile"><div class="h">${pic("camp",32)}<span class="ht">暮らしの変化</span></div><div class="big">まだ選ばれていません</div><div class="links"><button class="lk" data-go="lifestyle">場面を選ぶ</button></div></div>`;
   const c = list[0];
-  return `<div class="tile"><div class="h"><span class="lt">A</span><span class="ht">暮らしの変化</span></div>
+  return `<div class="tile"><div class="h">${pic("camp",32)}<span class="ht">暮らしの変化</span></div>
     <div class="s">あなたにいちばん合う使い方</div>
     <div style="display:flex;gap:12px;align-items:flex-start"><span class="lsic">${lsIcon(c.icon)}</span><span style="display:flex;flex-direction:column;gap:2px"><span class="big">${esc(c.title)}</span><span class="s">${esc(c.reasons.join("・"))} に合う</span></span></div>
     ${list.length > 1 ? `<div class="s">ほかに「${esc(list[1].title)}」など${list.length - 1}つの使い方</div>` : ""}

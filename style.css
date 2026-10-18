@@ -357,3 +357,51 @@ textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--panel);bo
 /* ===== Honda Charge ===== */
 .pin.honda{background:#C8102E;border-radius:4px;width:24px;height:24px;font-size:12px}
 .chip.k-honda[aria-pressed="true"]{background:#C8102E;border-color:#C8102E;color:#fff}
+
+/* ===== イラスト（images.js） ===== */
+.pic{display:inline-block;flex-shrink:0;object-fit:contain;vertical-align:middle}
+.carphoto{object-fit:cover;border-radius:8px}
+.herorow{display:flex;align-items:flex-end;gap:6px;margin-bottom:4px}
+.hpic{width:52px;height:52px;flex-shrink:0;border-radius:14px;background:var(--bg);display:flex;align-items:center;justify-content:center}
+.startcard{position:relative;flex-direction:row;align-items:center;justify-content:space-between;gap:12px}
+.sc-tx{display:flex;flex-direction:column;gap:6px}
+.sc-chips{display:flex;gap:8px;flex-wrap:wrap}
+.sc-chips span{display:inline-flex;align-items:center;gap:4px;padding:3px 10px 3px 6px;border-radius:999px;background:rgba(255,255,255,.18);font-size:13px;font-weight:700}
+.sc-pic{flex-shrink:0;filter:drop-shadow(0 4px 8px rgba(0,0,0,.25))}
+.sc-done{position:absolute;top:12px;right:12px}
+.deadline-line{display:flex;align-items:center;gap:8px}
+.sec h2{display:flex;align-items:center;gap:6px}
+.segpic label{gap:6px}
+.duopic{display:inline-flex;margin-right:-2px}
+.duopic .pic + .pic{margin-left:-8px}
+.cpic{position:relative;width:64px;height:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.plugbadge{position:absolute;right:-2px;bottom:-4px;width:26px;height:26px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.carc{align-items:center}
+.carc input{margin:0}
+.pillar{position:relative}
+.pillpic{position:absolute;top:14px;right:14px;opacity:.95}
+.pillar .ttl{padding-right:64px}
+.br{grid-template-columns:112px minmax(0,1fr) 80px}
+.br .lb{display:flex;align-items:center;gap:4px;line-height:1.2}
+.p3k{display:flex;align-items:center;gap:8px}
+.deadline b{display:flex;align-items:center;gap:6px}
+details.mini{border:0;padding:0}
+details.mini summary{min-height:32px;font-size:12px;font-weight:500;color:var(--sub)}
+.tile .h .pic{margin-right:2px}
+.lsic:has(.pic){background:transparent}
+.lsic.big:has(.pic){width:72px;height:72px}
+.lschip{padding-left:8px}
+.memo-top{flex-direction:row;align-items:center;gap:12px}
+.memo-res div{align-items:center;justify-content:flex-start}
+.memo-res div b{margin-left:auto}
+.memo-res div .pic{flex-shrink:0}
+@media (min-width:960px){
+  .app[data-wide] .br{grid-template-columns:140px minmax(0,1fr) 110px}
+  .pillpic .pic{width:88px;height:88px}
+}
+
+.memo-res .mr{display:flex;flex-direction:column;gap:0;min-width:0}
+.memo-res .mr span{font-size:11px}
+.memo-res .mr b{margin-left:0;text-align:left;font-size:17px;line-height:1.35}
+.memo-res div{gap:10px}
+.memo-res .mr{white-space:normal}.memo-res .mr span{white-space:nowrap}
