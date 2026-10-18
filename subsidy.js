@@ -11,16 +11,16 @@ window.SUBSIDY_AUTO = {
     "amountAsOf": "2026-10-13"
   },
   "amounts": {
-    "n-one-e": 580000,
-    "super-one": 1300000,
-    "insight": 1300000,
-    "n-van-e": 580000
+    "n-one-e": 1020000,
+    "super-one": 1183000,
+    "insight": 1182000,
+    "n-van-e": 788000
   },
   "sources": {
     "page": "https://www.cev-pc.or.jp/hojo/cev.html",
     "notice": "https://www.cev-pc.or.jp/notice/pdf/20260904_R7ho-cev_oshirase.pdf",
     "table": "https://www.cev-pc.or.jp/hojo/pdf/R7ho/R7ho_meigaragotojougen_3.pdf"
   },
-  "updatedAt": "2026-10-17",
-  "checkedAt": "2026-10-17"
+  "updatedAt": "2026-10-18",
+  "checkedAt": "2026-10-18"
 };
