@@ -5,24 +5,25 @@
    acKw: 普通充電で受け入れられる最大出力（kW）※仮置き・要確認
    ========================================================= */
 const EVS = {
-  "n-one-e":  {pic:"car", name:"N-ONE e:（e:G）", cat:"軽乗用EV", price:2699400, sub:580000, wh:105, kwh:29.6, tax:10800, wt:0, qkw:50, acKw:6, ok:true},
-  "super-one":{pic:"car", name:"Super-ONE", cat:"小型EV", price:3390200, sub:1300000, wh:113, kwh:29.6, tax:25000, wt:0, qkw:50, acKw:6, ok:false},
-  "insight":  {pic:"suv", name:"INSIGHT", cat:"クロスオーバーSUV EV", price:5500000, sub:1300000, wh:134, kwh:68.8, tax:25000, wt:0, qkw:150, acKw:6, ok:true},
-  "n-van-e":  {pic:"van", name:"N-VAN e:", cat:"軽商用EV", price:2600000, sub:580000, wh:126, kwh:29.6, tax:5000, wt:0, qkw:50, acKw:6, ok:false},
+  "n-one-e":  {pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", range:295, name:"N-ONE e:（e:G）", cat:"軽乗用EV", price:2699400, sub:580000, wh:105, kwh:29.6, tax:10800, wt:0, qkw:50, acKw:6, ok:true},
+  "super-one":{pic:"car", seats:"4人", size:"小型", use:"走りを楽しむ", range:274, name:"Super-ONE", cat:"小型EV", price:3390200, sub:1300000, wh:113, kwh:29.6, tax:25000, wt:0, qkw:50, acKw:6, ok:false},
+  "insight":  {pic:"suv", seats:"5人", size:"SUV", use:"家族で遠出", range:535, name:"INSIGHT", cat:"クロスオーバーSUV EV", price:5500000, sub:1300000, wh:134, kwh:68.8, tax:25000, wt:0, qkw:150, acKw:6, ok:true},
+  "n-van-e":  {pic:"van", seats:"1〜4人（グレードによる）", size:"軽バン", use:"仕事・趣味の荷物", range:245, name:"N-VAN e:", cat:"軽商用EV", price:2600000, sub:580000, wh:126, kwh:29.6, tax:5000, wt:0, qkw:50, acKw:6, ok:false},
   "custom":   {name:"その他のEV", cat:"スペックを入力", custom:true}
 };
-/* pic：画面に出すイラスト（images.js の名前）。写真を使うときは photo:"ファイル名" を足す
+/* seats・size・use：車を選ぶ画面に出す「使い方の印象」。range：一充電走行距離（WLTC、メーカー発表）
+   pic：画面に出すイラスト（images.js の名前）。写真を使うときは photo:"ファイル名" を足す
    比べる相手の車。type は "gas"（ガソリン車）/ "hv"（ハイブリッド車）。価格・燃費は仮の値 */
 const GASES = {
-  "n-one": {pic:"car", name:"N-ONE", cat:"軽乗用", type:"gas", price:1800000, fe:23, tax:10800, wt:3300},
-  "n-box": {pic:"car", name:"N-BOX", cat:"軽乗用", type:"gas", price:1800000, fe:21, tax:10800, wt:3300},
-  "n-van": {pic:"van", name:"N-VAN", cat:"軽商用", type:"gas", price:1500000, fe:18, tax:5000, wt:3300},
-  "fit":   {pic:"car", name:"フィット e:HEV", cat:"コンパクト", type:"hv", price:2300000, fe:27, tax:30500, wt:7500},
-  "zrv":   {pic:"suv", name:"ZR-V e:HEV", cat:"SUV", type:"hv", price:3600000, fe:22, tax:36000, wt:12300},
+  "n-one": {pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", name:"N-ONE", cat:"軽乗用", type:"gas", price:1800000, fe:23, tax:10800, wt:3300},
+  "n-box": {pic:"car", seats:"4人", size:"軽（背が高い）", use:"室内が広い・子育て", name:"N-BOX", cat:"軽乗用", type:"gas", price:1800000, fe:21, tax:10800, wt:3300},
+  "n-van": {pic:"van", seats:"1〜4人（グレードによる）", size:"軽バン", use:"仕事・趣味の荷物", name:"N-VAN", cat:"軽商用", type:"gas", price:1500000, fe:18, tax:5000, wt:3300},
+  "fit":   {pic:"car", seats:"5人", size:"コンパクト", use:"街乗りから遠出まで", name:"フィット e:HEV", cat:"コンパクト", type:"hv", price:2300000, fe:27, tax:30500, wt:7500},
+  "zrv":   {pic:"suv", seats:"5人", size:"SUV", use:"家族で遠出", name:"ZR-V e:HEV", cat:"SUV", type:"hv", price:3600000, fe:22, tax:36000, wt:12300},
   "custom":{name:"その他の車", cat:"スペックを入力", custom:true}
 };
-const RIVAL_LABEL = {gas:"ガソリン車", hv:"ハイブリッド車（HV）"};
-const RIVAL_SHORT = {gas:"ガソリン車", hv:"HV"};
+const RIVAL_LABEL = {gas:"ガソリン車", hv:"ハイブリッド車"};
+const RIVAL_SHORT = {gas:"ガソリン車", hv:"ハイブリッド車"};
 const DEP = { gas:{hi:0.12, mid:0.15, lo:0.18}, ev:{hi:0.15, mid:0.19, lo:0.23} }; // 年率の価値減少（仮）
 const SCEN_LABEL = {hi:"高め", mid:"中間", lo:"低め"};
 const SUBSIDY_HOLD_YEARS = 4;
