@@ -11,7 +11,7 @@ const S = {
   pGas:170, pHome:31, pPub:60, charger:150000, mGas:40000, mEv:25000, insGas:60000, insEv:60000,
   cSum:0.9, cWin:0.7, rGas:0.85, rEv:0.9, usable:70, scen:"mid",
   seenCost:false,
-  rivalType:"gas",         // 比べる相手：gas（ガソリン車）/ hv（ハイブリッド車）
+  rivalType:"gas", gFe:"",   // gFe：燃費を書き換えたとき（空なら車種のカタログ値）         // 比べる相手：gas（ガソリン車）/ hv（ハイブリッド車）
   // ---- 今日の走り（レンタカー返却時） ----
   dCar:"n-one-e", dKm:"", dSoc0:"", dSoc1:"", dSeason:"", dUse:false,
   // ---- 相談メモ ----
@@ -40,7 +40,8 @@ const man = v => (v<0?"−":"") + (Math.abs(v)/10000).toFixed(1).replace(/\.0$/,
 const sman = v => (v>0?"+":v<0?"−":"±") + (Math.abs(v)/10000).toFixed(1).replace(/\.0$/,"") + "万円";
 
 function gasCar(){ const d=GASES[S.gasKey]; if(!d) return null;
-  return d.custom ? {name:d.name, price:n("gc_price"), fe:n("gc_fe"), tax:n("gc_tax"), wt:n("gc_wt")} : d; }
+  if (d.custom) return {name:d.name, price:n("gc_price"), fe:n("gc_fe"), tax:n("gc_tax"), wt:n("gc_wt")};
+  const fe = parseFloat(S.gFe); return {...d, fe: fe > 0 ? fe : d.fe}; }
 function evCar(){ const d=EVS[S.evKey]; if(!d) return null;
   return d.custom ? {name:d.name, price:n("ec_price"), sub:SUBSIDY.closed?0:n("ec_sub"), wh:n("ec_wh"), kwh:n("ec_kwh"), tax:n("ec_tax"), wt:n("ec_wt")} : {...d, sub:subOf(d)}; }
 function rivalType(){ const d=GASES[S.gasKey]; return d && !d.custom ? d.type : S.rivalType; }
@@ -148,8 +149,17 @@ screens.gas = () => {
       <div class="chips">${presets.map(v=>`<button type="button" class="chip" aria-pressed="${+S.annualKm===v}" data-act="setKm:${v}">${v.toLocaleString("ja-JP")}km</button>`).join("")}</div>
       <p class="hint" style="margin:0">分からなければ 8,000km（月に約670km）で計算できます</p>
     </section>
+    <section class="sec"><h2>${pic("fuel",28)} 燃費とガソリン代</h2>
+      <div class="row2">
+        <label class="f">燃費（km/L）<input type="number" inputmode="decimal" data-k="gFe" value="${S.gFe!==""?S.gFe:(GASES[S.gasKey]?.fe??"")}" step="0.1" min="0" placeholder="車を選ぶと入ります"></label>
+        <label class="f">ガソリン代（円/L）<input type="number" inputmode="numeric" data-k="pGas" value="${S.pGas}" step="1" min="0"></label>
+      </div>
+      <p class="hint" style="margin:0">燃費は選んだ車のカタログ値が入ります。実際の燃費はカタログの約85%として計算します</p>
+    </section>
   </main>` + footer(btn("ev","次へ：EVを選ぶ", !S.gasKey));
 };
+
+screens.gas.update = () => document.querySelectorAll('[data-act^="setKm:"]').forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.act.split(":")[1] === +S.annualKm)));
 
 screens.ev = () => {
   const G = GASES[S.gasKey];
@@ -256,30 +266,34 @@ screens.cost.update = () => {
     <details class="mini"><summary>補助金について</summary><p class="hint" style="margin:0">${subsidyNote()}${S.evAdj||S.gasAdj?"　値引き・オプション差を含む。":""}</p></details>`;
 
   /* ② 乗るとき：ランニングコスト（月平均）= 燃料・電気代＋税金＋メンテナンス・車検＋保険 */
-  const gParts = [r.gasEnergy, r.G.tax+r.G.wt, n("mGas"), n("insGas")].map(v=>v/12);
-  const eParts = [r.evEnergy, r.E.tax+r.E.wt, n("mEv"), n("insEv")].map(v=>v/12);
+  const gParts = [r.gasEnergy, r.G.tax+r.G.wt, n("mGas"), n("insGas")];
+  const eParts = [r.evEnergy, r.E.tax+r.E.wt, n("mEv"), n("insEv")];
   const gM = gParts.reduce((a,b)=>a+b,0), eM = eParts.reduce((a,b)=>a+b,0), dM = gM - eM;
   const maxM = Math.max(gM, eM, 1);
   const RC = [["燃料・電気代",null],["税金","var(--rc2)"],["メンテ・車検","var(--rc3)"],["保険","var(--rc4)"]];
   const stack = (parts, main) => `<span class="stk">${parts.map((v,k)=>`<i style="width:${v/maxM*100}%;background:${k===0?main:RC[k][1]}"></i>`).join("")}</span>`;
   const p2title = dM >= 0
-    ? `<h2 class="ttl" id="p2t">ランニングコストが<br>月 <em class="num">約${yen100(dM)}</em> 安い</h2>`
-    : `<h2 class="ttl" id="p2t">この条件では<br>ランニングコストが月 約${yen100(dM)} 高い</h2>`;
+    ? `<h2 class="ttl" id="p2t">ランニングコストが<br>年 <em class="num">約${man(dM)}</em> 安い</h2>`
+    : `<h2 class="ttl" id="p2t">この条件では<br>ランニングコストが年 約${man(-dM)} 高い</h2>`;
   const ratio = r.k100a / Math.max(r.k100g, 0.1);
-  const diffRow = (label, k, note) => { const d = gParts[k]-eParts[k]; return `<div class="rcd"><span>${label}</span><b class="num">${Math.abs(d)<50?"ほぼ同じ":`月 ${d>0?"−":"+"}${yen100(d)}`}</b>${note?`<small>${note}</small>`:""}</div>`; };
-  document.getElementById("p2").innerHTML = `<span class="pillpic">${pic("plug",64)}</span><div class="kick"><i>2</i>乗るとき（月の平均）</div>${p2title}
+  const yen1000 = v => `${(Math.round(Math.abs(v)/1000)*1000).toLocaleString("ja-JP")}円`;
+  const diffRow = (label, k, note) => { const d = gParts[k]-eParts[k]; return `<div class="rcd"><span>${label}</span><b class="num">${Math.abs(d)<500?"ほぼ同じ":`年 ${d>0?"−":"+"}${yen1000(d)}`}</b>${note?`<small>${note}</small>`:""}</div>`; };
+  document.getElementById("p2").innerHTML = `<span class="pillpic">${pic("plug",64)}</span><div class="kick"><i>2</i>乗るとき（1年あたり）</div>${p2title}
     <div class="bars">
-      <div class="br"><span class="lb">${pic("fuel",26)}<span>${rv}</span></span>${stack(gParts,"var(--gas)")}<span class="v num" style="color:var(--gas)">月${yen100(gM)}</span></div>
-      <div class="br big"><span class="lb" style="color:var(--ev);font-weight:700">${pic("plug",26)}<span>EV</span></span>${stack(eParts,"var(--ev)")}<span class="v num">月${yen100(eM)}</span></div>
+      <div class="br"><span class="lb">${pic("fuel",26)}<span>${rv}</span></span>${stack(gParts,"var(--gas)")}<span class="v num" style="color:var(--gas)">年${man(gM)}</span></div>
+      <div class="br big"><span class="lb" style="color:var(--ev);font-weight:700">${pic("plug",26)}<span>EV</span></span>${stack(eParts,"var(--ev)")}<span class="v num">年${man(eM)}</span></div>
     </div>
     <div class="rclg">${RC.map(([l,c],k)=>`<span><i style="background:${k===0?"linear-gradient(90deg,var(--gas) 50%,var(--ev) 50%)":c}"></i>${l}</span>`).join("")}</div>
+    <div class="k100"><span class="k100t">100円で走れる距離</span>
+      <div class="duo"><div class="st g"><span>${pic("fuel",22)}${rv}</span><b class="num">${r.k100g.toFixed(1)}km</b><small>ガソリン ${n("pGas")}円/L</small></div><div class="st e"><span>${pic("plug",22)}EV</span><b class="num">${r.k100a.toFixed(1)}km</b><small>${S.homeCharge?`自宅${Math.round(n("homeShare"))}%・外で充電`:"外で充電"}</small></div></div>
+      ${ratio>=1.05?`<div class="times">同じ100円で、EVは約${ratio.toFixed(1)}倍走れる</div>`:""}</div>
     <div class="rcds">
-      ${diffRow(`${pic("fuel",22)}燃料・電気代`,0, ratio>=1.05?`同じ100円で約${ratio.toFixed(1)}倍走れる`:"")}
+      ${diffRow(`${pic("fuel",22)}燃料・電気代`,0, `${rv}は燃費${r.G.fe}km/L（実際は約${(r.G.fe*(n("rGas")||1)).toFixed(1)}km/L）で計算`)}
       ${diffRow(`${pic("yen",22)}税金`,1, `自動車税 年${(r.G.tax-r.E.tax).toLocaleString("ja-JP")}円・重量税 年${(r.G.wt-r.E.wt).toLocaleString("ja-JP")}円の差`)}
       ${diffRow(`${pic("check",22)}メンテ・車検`,2, "エンジンオイル交換などがない（目安）")}
       ${diffRow(`${pic("clipboard",22)}保険`,3, "同じ金額で計算（目安）")}
     </div>
-    <p class="hint" style="margin:0">1年で 約${man(Math.abs(dM*12))}の差・年${km.toLocaleString("ja-JP")}km${r.drive?"・電費は今日の走りから":""}。メンテ・保険は目安の値で、設定から変えられます</p>`;
+    <p class="hint" style="margin:0">月にすると約${yen100(dM/12)}の差・年${km.toLocaleString("ja-JP")}km${r.drive?"・電費は今日の走りから":""}。メンテ・保険は目安の値で、設定から変えられます</p>`;
 
   /* ③ 合わせると */
   const good = r.diff < 0;
@@ -314,7 +328,7 @@ screens.total = () => {
   const r = doneB() ? calc() : null;
   const tileB = r ? `<div class="tile"><div class="h">${pic("coin",32)}<span class="ht">コスト</span></div>
       <div class="big num" style="color:${r.diff<0?"var(--ev)":"var(--gas)"}">${r.diff<0?`${r.N}年で ${man(-r.diff)} おトク`:`${r.N}年では${rivalShort()}が ${man(r.diff)} 安い`}</div>
-      <div class="badges" style="font-size:12px">${r.E.sub>0?`<span class="bdg ok">補助金 −${Math.round(r.E.sub/10000)}万円</span>`:""}${r.gAnnual>r.eAnnual?`<span class="bdg ok">維持費 月約${(Math.round((r.gAnnual-r.eAnnual)/12/100)*100).toLocaleString("ja-JP")}円安い</span>`:""}</div>
+      <div class="badges" style="font-size:12px">${r.E.sub>0?`<span class="bdg ok">補助金 −${Math.round(r.E.sub/10000)}万円</span>`:""}${r.gAnnual>r.eAnnual?`<span class="bdg ok">維持費 年約${man(r.gAnnual-r.eAnnual)}安い</span>`:""}</div>
       <div class="s">${r.G.name}（${rivalShort()}）との比較・逆転：${r.cross}</div>
       <div class="links"><button class="lk" data-go="cost">詳しく見る</button><button class="lk" data-go="gas">条件を変える</button></div></div>`
     : `<div class="tile"><div class="h">${pic("coin",32)}<span class="ht">コスト</span></div><div class="big">まだ入力されていません</div><div class="links"><button class="lk" data-go="gas">車両を選んで比較する</button></div></div>`;
@@ -400,6 +414,7 @@ app.addEventListener("input", e => {
   const k = e.target.dataset.k; if(!k) return;
   S[k] = e.target.type==="checkbox" ? e.target.checked : e.target.value;
   // 表示構造が変わる入力は再描画、それ以外は結果だけ更新
+  if (k==="gasKey") S.gFe = "";
   if (["gasKey","evKey","kmMode","rivalType"].includes(k)) { if(k==="rivalType" && GASES[S.gasKey] && !GASES[S.gasKey].custom && GASES[S.gasKey].type!==S.rivalType) S.gasKey=""; render(true); return; }
   if (k==="homeCharge"){ const w=document.getElementById("shareWrap"); if(w) w.hidden=!S.homeCharge; if(current==="area"){ render(true); return; } }
   if (k==="homeShare"){ const o=document.getElementById("shareOut"); if(o) o.textContent=S.homeShare+"%"; }
