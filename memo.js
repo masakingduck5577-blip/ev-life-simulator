@@ -113,9 +113,9 @@ screens.memo = () => {
   const cross = r.dInit <= 0 && r.dAnnual >= 0 ? "買った時から" : (r.crossT !== null && r.crossT <= 30 ? `約${r.crossT.toFixed(1)}年目から` : "この条件では安くならない");
   const total = r.diff < 0 ? `${r.N}年で EV が 約${man(-r.diff)} 安い` : `${r.N}年で ${rv} が 約${man(r.diff)} 安い`;
   const row = (icon, k, v, sub, hot) => `<div class="rp-row${hot ? " hot" : ""}">${pic(icon, 28)}<span class="rp-k">${k}</span><span class="rp-v"><b class="num">${v}</b>${sub ? `<small>${sub}</small>` : ""}</span></div>`;
-  return header("相談シート", "cost", "相談メモ") + `<main class="main report" style="gap:16px">
+  return header("相談メモ", "cost", "相談メモ") + `<main class="main report" id="report" style="gap:16px">
     ${S.fromLink ? `<div class="info">共有されたリンクから開いています。数字は送られた条件で計算し直しています。</div>` : ""}
-    <div class="rp-head"><div><span class="rp-shop">Honda Cars 栃木中央 ゆいの杜店</span><h1>EV購入 相談シート</h1><span class="rp-date">${ds} 作成・EV Life Simulator</span></div>${pic("clipboard", 56)}</div>
+    <div class="rp-head"><div><span class="rp-shop">Honda Cars</span><h1>EV購入 相談メモ</h1><span class="rp-date">${ds} 作成・EV Life Simulator</span></div>${pic("clipboard", 56)}</div>
 
     <section class="memo-card rp">
       <h2><i>1</i>お客様の条件</h2>
@@ -154,20 +154,15 @@ screens.memo = () => {
       </div>
     </section>
 
-    <section class="memo-card noprint">
-      <h2>${pic("phone",28)} スタッフのPCで開く・家族に送る</h2>
-      <div class="memo-share"><div id="qr" class="qr" aria-label="この結果を開くQRコード"></div>
-        <div style="display:flex;flex-direction:column;gap:8px;flex-grow:1">
-          <p class="hint" style="margin:0">リンクには試算の条件だけが入ります（名前・住所は入りません）</p>
-          <button class="btn2" data-act="memoCopy">リンクをコピー</button>
-          ${navigator.share ? '<button class="btn2" data-act="memoShare">LINEなどで送る</button>' : ""}
-          <button class="btn2" data-act="memoPrint">印刷・PDFで保存</button>
-          <span class="toast" id="memoMsg" aria-live="polite"></span>
-        </div></div>
+    <section class="memo-card noprint savecard">
+      <h2>${pic("phone",28)} 相談メモを画像で保存</h2>
+      <p class="hint" style="margin:0">この相談メモを1枚の画像にします。お店でスタッフに見せたり、家族に送ったりできます。</p>
+      <button class="btn" data-act="memoImage">${pic("memo",24)}画像で保存する</button>
+      <span class="toast" id="memoMsg" aria-live="polite"></span>
     </section>
   </main>` + footer(btn2("cost", "シミュレーション結果に戻る"));
 };
-screens.memo.update = () => drawQR();
+screens.memo.update = () => {};
 
 /* ---------- リンクで結果を渡す ---------- */
 const S_DEFAULT = JSON.parse(JSON.stringify(S));
@@ -216,7 +211,140 @@ Object.assign(ACT, {
   },
   async memoShare() { try { await navigator.share({ title: "EVの試算と相談メモ", url: shareUrl() }); } catch (e) {} },
   memoPrint() { window.print(); },
+  memoImage() { saveMemoImage(); },
+  rentalGo() {
+    if (RENTAL.url) { const u = RENTAL.url.replace("{car}", encodeURIComponent(S.evKey || "")); RENTAL.newTab ? window.open(u, "_blank", "noopener") : (location.href = u); }
+    else go("rental");
+  },
 });
 
 /* 入力が変わったらQRを作り直す（メモ欄） */
-app.addEventListener("input", (e) => { if (current === "memo" && e.target.dataset.q === "memoNote") { clearTimeout(drawQR.t); drawQR.t = setTimeout(drawQR, 400); } });
+/* 聞きたいことのメモ欄は、入力のたびに一覧へ反映（再描画は入力が止まってから） */
+app.addEventListener("input", (e) => { if (current === "memo" && e.target.dataset.q === "memoNote") { clearTimeout(window.__mn); window.__mn = setTimeout(() => { const el = document.querySelector('textarea[data-q="memoNote"]'); const pos = el && el.selectionStart; render(true); const t = document.querySelector('textarea[data-q="memoNote"]'); if (t) { t.focus(); try { t.setSelectionRange(pos, pos); } catch (er) {} } }, 700); } });
+
+/* =========================================================
+   相談メモを1枚の画像（PNG）にする
+   画面をそのまま写すのではなく、同じ内容をキャンバスに描き直す（外部ライブラリなし）
+   ========================================================= */
+async function saveMemoImage() {
+  const r = doneB() || S.fromLink ? calc() : null; if (!r) return;
+  const msg = (t) => { const m = document.getElementById("memoMsg"); if (m) m.textContent = t; };
+  msg("画像を作っています…");
+  try {
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    const keys = ["clipboard", r.E.pic || "car", "plug", "coin", "tag", "yen"];
+    const imgs = {};
+    await Promise.all(keys.map((k) => new Promise((res) => { const im = new Image(); im.onload = () => { imgs[k] = im; res(); }; im.onerror = res; im.src = (window.IMG || {})[k] || ""; if (!im.src) res(); })));
+    const canvas = drawMemoCanvas(r, imgs);
+    const blob = await new Promise((res) => canvas.toBlob(res, "image/png"));
+    const d = new Date(), name = `相談メモ_${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}.png`;
+    const file = new File([blob], name, { type: "image/png" });
+    const touch = window.matchMedia && matchMedia("(pointer:coarse)").matches;
+    if (touch && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: "EV購入 相談メモ" }); msg("画像を保存・共有しました"); return; } catch (e) { if (e && e.name === "AbortError") { msg(""); return; } }
+    }
+    const url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    msg("画像を保存しました");
+  } catch (e) { msg("画像を作れませんでした。画面のスクリーンショットをお使いください"); }
+}
+
+function drawMemoCanvas(r, imgs) {
+  const W = 1080, P = 48, CW = W - P * 2, F = '"Noto Sans JP","Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
+  const C = { bg: "#141518", card: "#1E1F23", card2: "#27282D", line: "#34363C", ink: "#F4F4F5", sub: "#A3A6AD", red: "#FF4A4F", red1: "#A81E24", red2: "#E0352F" };
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = 4200;
+  const x = cv.getContext("2d"); x.textBaseline = "alphabetic";
+  const font = (px, w = 400) => `${w} ${px}px ${F}`;
+  const rr = (X, Y, w, h, rad, fill) => { x.beginPath(); x.moveTo(X + rad, Y); x.arcTo(X + w, Y, X + w, Y + h, rad); x.arcTo(X + w, Y + h, X, Y + h, rad); x.arcTo(X, Y + h, X, Y, rad); x.arcTo(X, Y, X + w, Y, rad); x.closePath(); x.fillStyle = fill; x.fill(); };
+  const grad = (Y, h) => { const g = x.createLinearGradient(0, Y, W, Y + h); g.addColorStop(0, C.red1); g.addColorStop(1, C.red2); return g; };
+  const wrap = (t, maxW, f) => { x.font = f; const out = []; let line = ""; for (const ch of String(t)) { if (x.measureText(line + ch).width > maxW && line && !"。、）」・".includes(ch)) { out.push(line); line = ch; } else line += ch; } if (line) out.push(line); return out; };
+  const text = (t, X, Y, f, col, align = "left") => { x.font = f; x.fillStyle = col; x.textAlign = align; x.fillText(t, X, Y); x.textAlign = "left"; };
+  const img = (k, X, Y, s) => { if (imgs[k]) x.drawImage(imgs[k], X, Y, s, s); };
+  const section = (num, title, body) => { const h0 = body(false, y + 100); rr(P, y, CW, h0 + 124, 28, C.card);
+    x.beginPath(); x.arc(P + 52, y + 54, 22, 0, Math.PI * 2); x.fillStyle = C.red2; x.fill(); text(String(num), P + 52, y + 64, font(26, 700), "#fff", "center");
+    text(title, P + 90, y + 66, font(34, 700), C.ink); x.fillStyle = C.line; x.fillRect(P + 28, y + 92, CW - 56, 2);
+    body(true, y + 116); y += h0 + 124 + 28; };
+
+  const rv = rivalShort(), km = Math.round(r.km), dA = r.gAnnual - r.eAnnual, L = r.local.L;
+  const d = new Date(), ds = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  const cross = r.dInit <= 0 && r.dAnnual >= 0 ? "買った時から" : (r.crossT !== null && r.crossT <= 30 ? `約${r.crossT.toFixed(1)}年目から` : "この条件では安くならない");
+  const picked = MEMO_ASKS.filter((q) => S.memoAsks[q.id]).map((q) => q.label);
+  let y = P;
+
+  x.fillStyle = C.bg; x.fillRect(0, 0, W, cv.height);
+  // 見出し
+  rr(P, y, CW, 210, 32, grad(y, 210));
+  text("Honda Cars", P + 40, y + 62, font(28, 700), "rgba(255,255,255,.88)");
+  text("EV購入 相談メモ", P + 40, y + 134, font(60, 700), "#fff");
+  text(`${ds} 作成・EV Life Simulator`, P + 40, y + 182, font(26), "rgba(255,255,255,.85)");
+  img("clipboard", W - P - 150, y + 45, 120);
+  y += 210 + 28;
+
+  // 1 お客様の条件
+  section(1, "お客様の条件", (draw, Y) => {
+    const ix = P + 28, iw = CW - 56; let h = 0;
+    if (draw) { rr(ix, Y, iw, 160, 20, C.card2); img(r.E.pic || "car", ix + 22, Y + 25, 110);
+      text("検討中のEV", ix + 158, Y + 46, font(24, 700), C.sub);
+      text(r.E.name, ix + 158, Y + 100, font(46, 700), C.ink);
+      text(`比べる車：${r.G.name}（${rv}）`, ix + 158, Y + 140, font(26), C.sub); }
+    h += 160 + 16;
+    if (draw) { rr(ix, Y + h, iw, 130, 20, C.card2); text("1年に走る距離", ix + 24, Y + h + 44, font(24, 700), C.sub);
+      text(km.toLocaleString("ja-JP"), ix + 24, Y + h + 110, font(64, 700), C.red);
+      x.font = font(64, 700); const kw = x.measureText(km.toLocaleString("ja-JP")).width; text("km", ix + 32 + kw, Y + h + 110, font(30, 700), C.sub); }
+    h += 130 + 16;
+    const tiles = [["お住まい", L ? L.name : "―"], ["自宅での充電", S.homeCharge ? `できる（${Math.round(n("homeShare"))}%）` : "できない"], ["乗る年数", `${r.N}年`], ["ガソリン車の燃費", `${r.G.fe}km/L`], ["ガソリン代", `${n("pGas")}円/L`]];
+    if (r.drive) tiles.push(["EVの電費（今日の走り）", `1kWhで${r.drive.kmPerKwh.toFixed(1)}km`]);
+    const tw = (iw - 16) / 2;
+    tiles.forEach(([k, v], i) => { const tx = ix + (i % 2) * (tw + 16), ty = Y + h + Math.floor(i / 2) * 126;
+      if (draw) { rr(tx, ty, tw, 110, 18, C.card2); text(k, tx + 22, ty + 40, font(22, 700), C.sub); text(v, tx + 22, ty + 86, font(32, 700), C.ink); } });
+    h += Math.ceil(tiles.length / 2) * 126 - 16;
+    return h;
+  });
+
+  // 2 シミュレーション結果
+  section(2, "シミュレーション結果", (draw, Y) => {
+    const ix = P + 28, iw = CW - 56; let h = 0;
+    const rows = [
+      ["plug", "ランニングコスト", dA >= 0 ? `年 約${man(dA)} 安い` : `年 約${man(-dA)} 高い`, `${rv} 年${man(r.gAnnual)} → EV 年${man(r.eAnnual)}`],
+      ["coin", "100円で走れる距離", `${r.k100g.toFixed(1)}km → ${r.k100a.toFixed(1)}km`, `${rv} → EV`],
+      ["tag", "補助金", r.subTotal > 0 ? `最大 ${man0(r.subTotal)}` : (SUBSIDY.closed ? "国の補助金は受付終了" : "対象外・未確認"),
+        `国 ${r.E.sub > 0 ? `最大${man0(r.E.sub)}（${SUBSIDY.endText}まで・見込み）` : "―"}${L ? `／${L.name} ${r.local.counted ? `最大${man0(r.local.counted)}` : ((window.LOCAL_STATUS_LABEL || {})[L.status] || "")}` : ""}`],
+    ];
+    rows.forEach(([k, label, v, sub]) => { const lines = wrap(sub, iw - 110, font(22));
+      const rh = 108 + lines.length * 30;
+      if (draw) { img(k, ix, Y + h + 22, 64); text(label, ix + 90, Y + h + 40, font(24, 700), C.sub); text(v, ix + 90, Y + h + 92, font(42, 700), C.red);
+        lines.forEach((l, i) => text(l, ix + 90, Y + h + 128 + i * 30, font(22), C.sub)); x.fillStyle = C.line; x.fillRect(ix, Y + h + rh - 2, iw, 2); }
+      h += rh; });
+    h += 16;
+    const total = r.diff < 0 ? `${r.N}年で EV が 約${man(-r.diff)} 安い` : `${r.N}年で ${rv} が 約${man(r.diff)} 安い`;
+    const tl = wrap(total, iw - 140, font(40, 700));
+    const th = 100 + tl.length * 52;
+    if (draw) { rr(ix, Y + h, iw, th, 22, grad(Y + h, th)); img("yen", ix + 22, Y + h + 30, 64);
+      text("トータル", ix + 110, Y + h + 44, font(24, 700), "rgba(255,255,255,.88)");
+      tl.forEach((l, i) => text(l, ix + 110, Y + h + 96 + i * 52, font(40, 700), "#fff"));
+      text(`${rv}より安くなるのは ${cross}`, ix + 110, Y + h + th - 22, font(24), "rgba(255,255,255,.88)"); }
+    h += th;
+    return h;
+  });
+
+  // 3 聞きたいこと
+  section(3, `聞きたいこと（${picked.length + (S.memoNote ? 1 : 0)}件）`, (draw, Y) => {
+    const ix = P + 28, iw = CW - 56; let h = 0;
+    const items = picked.map((t, i) => [`${i + 1}.`, t, font(32, 700), C.ink]);
+    if (S.memoNote) items.push([`${picked.length + 1}.`, S.memoNote, font(30), C.ink]);
+    if (!items.length) { if (draw) text("（選ばれていません）", ix, Y + 36, font(28), C.sub); return 50; }
+    items.forEach(([no, t, f, col]) => { const lines = wrap(t, iw - 60, f);
+      if (draw) { text(no, ix, Y + h + 38, font(32, 700), C.red); lines.forEach((l, i) => text(l, ix + 52, Y + h + 38 + i * 44, f, col)); }
+      h += lines.length * 44 + 14; });
+    return h;
+  });
+
+  // 注意書き
+  wrap("価格・燃費・メンテ・保険の一部は仮の値・目安です。正式な金額は見積もりで確認してください。補助金は予算に達すると受付が終わります。", CW, font(22)).forEach((l) => { text(l, P, y + 10, font(22), C.sub); y += 32; });
+  y += P - 10;
+
+  const out = document.createElement("canvas"); out.width = W; out.height = Math.ceil(y);
+  out.getContext("2d").drawImage(cv, 0, 0);
+  return out;
+}

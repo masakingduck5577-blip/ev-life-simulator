@@ -741,3 +741,15 @@ details.mini>summary{justify-content:flex-start}
   .rp-row.hot{background:#C8102E !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 @media (min-width:960px){ .rp-tiles .big{grid-column:1/-1;grid-row:auto} }
+
+/* ===== 結果画面の下：相談メモとレンタカー ===== */
+.ft2{flex-direction:row;gap:10px}
+.ft2 .btn{flex:1;flex-direction:column;gap:0;min-height:64px;padding:6px 10px;line-height:1.3}
+.ft2 .b-t{display:flex;align-items:center;gap:4px;font-size:16px}
+.ft2 .b-s{font-size:11px;font-weight:500;opacity:.85}
+.ft2 .rentbtn{background:#2A2B30;border:1.5px solid #E0352F;box-shadow:none}
+.ft2 .rentbtn:hover{background:#3A1C1F}
+@media (min-width:960px){ .app[data-wide] .ft2 .btn{min-width:280px;flex:0 0 auto} }
+.rcd>span{color:var(--sub)}
+.savecard .btn{gap:8px}
+.ft2 .b-t{white-space:nowrap;font-size:15px}.ft2 .b-t .pic{width:18px;height:18px}.ft2 .btn{padding:6px 8px}

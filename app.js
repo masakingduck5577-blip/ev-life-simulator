@@ -208,7 +208,10 @@ screens.cost = () => {
       ${numIn("usable","日常で使う充電幅（%）",5)}
       <label class="f">残価シナリオ<select data-k="scen">${["hi","mid","lo"].map(s=>`<option value="${s}"${S.scen===s?" selected":""}>${SCEN_LABEL[s]}</option>`).join("")}</select></label>
     </div></div></details>
-  </main>` + footer(btn("memo","相談メモを作る"));
+  </main>` + `<footer class="ft ft2">
+      <button class="btn" data-go="memo"><span class="b-t">相談メモを作る</span><span class="b-s">お店で見せる1枚</span></button>
+      <button class="btn rentbtn" data-act="rentalGo"><span class="b-t">${pic("key",22)}レンタカーを予約</span><span class="b-s">${esc((EVS[S.evKey]?.name||"EV").split("（")[0])}に乗ってみる</span></button>
+    </footer>`;
 };
 
 /* 補助金の受付期限（次世代自動車振興センターの発表。cars.js の SUBSIDY） */
@@ -296,7 +299,8 @@ screens.cost.update = () => {
   const road = (cls, img, label, v, sub) => `<div class="road ${cls}"><div class="rd-l">${pic(img,26)}<span>${label}</span></div>
       <div class="rd-track"><span class="rd-fill" style="width:${v/kmax*100}%"><span class="rd-car">${pic("car",34)}</span></span></div>
       <div class="rd-v"><b class="num">${v.toFixed(1)}</b><span>km</span></div><small>${sub}</small></div>`;
-  document.getElementById("p2").innerHTML = `<h3 class="ttl2" id="p2t">${dM >= 0 ? `ランニングコストが<br>年 <em class="num">約${man(dM)}</em> <span class="nw">安い</span>` : `ランニングコストが 年 約${man(-dM)} 高い`}</h3>
+  document.getElementById("p2").innerHTML = `<span class="pillpic">${pic("plug",64)}</span><div class="kick">乗るとき</div>
+    <h2 class="ttl" id="p2t">${dM >= 0 ? `ランニングコストが<br>年 <em class="num">約${man(dM)}</em> <span class="nw">安い</span>` : `ランニングコストが<br>年 約${man(-dM)} 高い`}</h2>
     <div class="bars">
       <div class="br"><span class="lb">${pic("fuel",26)}<span>${rv}</span></span>${stack(gParts,"var(--gas)")}<span class="v num" style="color:var(--gas)">年${man(gM)}</span></div>
       <div class="br big"><span class="lb" style="color:var(--ev);font-weight:700">${pic("plug",26)}<span>EV</span></span>${stack(eParts,"var(--ev)")}<span class="v num">年${man(eM)}</span></div>
@@ -361,11 +365,11 @@ screens.total = () => {
 const stub = (title,back,tag,heading,items,next) => () => header(title,back,tag) + `<main class="main">
   <div class="stub"><span class="pill soon" style="align-self:flex-start">準備中</span><h2>${heading}</h2><ul>${items.map(i=>`<li>${i}</li>`).join("")}</ul></div>
 </main>` + footer(...next);
-screens.rental = () => { const E=evCar(); return header("レンタカーで試す","total","次の一歩") + `<main class="main">
+screens.rental = () => { const E=evCar(); return header("EVレンタカー","cost","予約") + `<main class="main">
   <div class="hero"><h1>数字の次は、<br>乗り心地を確かめる</h1><p>静かさや加速は、乗ってみるのが一番です。</p></div>
-  <div class="stub"><span class="pill soon" style="align-self:flex-start">レンタカーアプリと連携予定</span><h2>${E?E.name:"選んだEV"} を予約</h2><ul><li>ゆいの杜店で借りて、ゆいの杜店で返す</li><li>診断結果（車種・よく行く場所）を引き継いで予約画面を開く</li></ul></div>
+  <div class="stub"><span class="pill soon" style="align-self:flex-start">レンタカーアプリと連携予定</span><h2>${E?E.name:"選んだEV"} を予約</h2><ul><li>${RENTAL.shop}で借りて、同じ店舗に返す</li><li>${RENTAL.note}</li><li>選んだ車種を引き継いで予約画面を開く（予約画面は準備中）</li></ul></div>
   <div class="info"><b>返却するときに</b><br>走った距離と電池の残量を入れると、今日の走りからあなたの電費を出して、コストを計算し直します。</div>
-</main>` + footer(btn("rental-go","レンタカーを予約する（準備中）"), btn2("drive","返却した：今日の走りを入れる")); };
+</main>` + footer(btn2("cost","シミュレーション結果に戻る"), btn2("drive","返却した：今日の走りを入れる")); };
 screens.share = () => header("結果を共有","memo","共有") + `<main class="main"><div class="stub"><span class="pill soon" style="align-self:flex-start">準備中</span><h2>家族に見せる1枚サマリー</h2><ul><li>節約額・行ける範囲・おすすめ車種を1枚に</li><li>リンクを送ると同じ結果を開ける</li></ul></div></main>` + footer(btn2("total","診断結果に戻る"));
 
 /* =========================================================
