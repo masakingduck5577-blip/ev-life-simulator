@@ -302,10 +302,10 @@ screens.cost.update = () => {
   document.getElementById("p2").innerHTML = `<span class="pillpic">${pic("plug",64)}</span><div class="kick">乗るとき</div>
     <h2 class="ttl" id="p2t">${dM >= 0 ? `ランニングコストが<br>年 <em class="num">約${man(dM)}</em> <span class="nw">安い</span>` : `ランニングコストが<br>年 約${man(-dM)} 高い`}</h2>
     <div class="bars">
-      <div class="br"><span class="lb">${pic("fuel",26)}<span>${rv}</span></span>${stack(gParts,"var(--gas)")}<span class="v num" style="color:var(--gas)">年${man(gM)}</span></div>
+      <div class="br"><span class="lb">${pic("fuel",26)}<span>${rv}</span></span>${stack(gParts,"var(--ev)")}<span class="v num" style="color:var(--gas)">年${man(gM)}</span></div>
       <div class="br big"><span class="lb" style="color:var(--ev);font-weight:700">${pic("plug",26)}<span>EV</span></span>${stack(eParts,"var(--ev)")}<span class="v num">年${man(eM)}</span></div>
     </div>
-    <div class="rclg">${RC.map(([l,c],k)=>`<span><i style="background:${k===0?"linear-gradient(90deg,var(--gas) 50%,var(--ev) 50%)":c}"></i>${l}</span>`).join("")}</div>
+    <div class="rclg">${RC.map(([l,c],k)=>`<span><i style="background:${k===0?"var(--ev)":c}"></i>${l}</span>`).join("")}</div>
     <div class="rcds">
       ${diffRow(`${pic("fuel",22)}燃料・電気代`,0, `${rv}は燃費${r.G.fe}km/L（実際は約${(r.G.fe*(n("rGas")||1)).toFixed(1)}km/L）で計算`)}
       ${diffRow(`${pic("yen",22)}税金`,1, `自動車税 年${(r.G.tax-r.E.tax).toLocaleString("ja-JP")}円・重量税 年${(r.G.wt-r.E.wt).toLocaleString("ja-JP")}円の差`)}
@@ -368,8 +368,7 @@ const stub = (title,back,tag,heading,items,next) => () => header(title,back,tag)
 screens.rental = () => { const E=evCar(); return header("EVレンタカー","cost","予約") + `<main class="main">
   <div class="hero"><h1>数字の次は、<br>乗り心地を確かめる</h1><p>静かさや加速は、乗ってみるのが一番です。</p></div>
   <div class="stub"><span class="pill soon" style="align-self:flex-start">レンタカーアプリと連携予定</span><h2>${E?E.name:"選んだEV"} を予約</h2><ul><li>${RENTAL.shop}で借りて、同じ店舗に返す</li><li>${RENTAL.note}</li><li>選んだ車種を引き継いで予約画面を開く（予約画面は準備中）</li></ul></div>
-  <div class="info"><b>返却するときに</b><br>走った距離と電池の残量を入れると、今日の走りからあなたの電費を出して、コストを計算し直します。</div>
-</main>` + footer(btn2("cost","シミュレーション結果に戻る"), btn2("drive","返却した：今日の走りを入れる")); };
+</main>` + footer(btn2("cost","シミュレーション結果に戻る")); };
 screens.share = () => header("結果を共有","memo","共有") + `<main class="main"><div class="stub"><span class="pill soon" style="align-self:flex-start">準備中</span><h2>家族に見せる1枚サマリー</h2><ul><li>節約額・行ける範囲・おすすめ車種を1枚に</li><li>リンクを送ると同じ結果を開ける</li></ul></div></main>` + footer(btn2("total","診断結果に戻る"));
 
 /* =========================================================
