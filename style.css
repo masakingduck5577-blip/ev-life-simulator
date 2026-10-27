@@ -790,3 +790,21 @@ details.mini>summary{justify-content:flex-start}
 .homeopts .lsopt .tx{display:flex;flex-direction:column;gap:2px}
 .homeopts .lsopt small{font-size:12px;color:var(--sub);font-weight:400}
 .rcd>span{font-weight:700}
+.mapbox.tall{height:400px}
+@media (min-width:960px){ .mapbox.tall{height:520px} }
+.maplegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--sub)}
+.maplegend>span{display:flex;align-items:center;gap:6px}
+.maplegend .pin{width:20px;height:20px;font-size:10px}
+.freqcard{display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:20px;background:var(--panel);border:1.5px solid var(--ev)}
+.freqcard .fc-k{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#FF6B6F}
+.freqcard .fc-big{font-size:22px;font-weight:700;line-height:1.4}
+.freqcard .fc-big em{font-style:normal;font-size:30px;color:#FF4A4F}
+.freqcard .fc-g,.nearsum .ns-g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.freqcard .fc-g div,.nearsum .ns-g div{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;background:var(--panel2)}
+.freqcard .fc-g span,.nearsum .ns-g span{font-size:12px;font-weight:700;color:var(--sub)}
+.freqcard .fc-g b,.nearsum .ns-g b{font-size:18px;color:#fff}
+.freqcard .fc-s{margin:0;font-size:14px;line-height:1.7}
+.nearsum{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.nearsum .ns-h{font-size:15px;font-weight:700}
+.nearsum .ns-h b{font-size:20px;color:#FF4A4F}
+.nearlist{display:flex;flex-direction:column;gap:8px;margin-top:8px}

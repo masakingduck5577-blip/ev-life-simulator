@@ -54,14 +54,18 @@ window.FACILITIES = [
    [緯度, 経度] の点を順につないだ多角形。今は栃木県をおおまかに囲む仮の範囲。
    データを集めた範囲に合わせて書き換える。
    ========================================================= */
-/* ---------- 自動で取り込んだ一覧（chargers.js）と合わせる ---------- */
-(function mergeAutoFacilities() {
-  const auto = window.AUTO_FACILITIES || [];
-  if (!auto.length) return;                                   // まだ取り込む前はデモのまま
-  const own = window.FACILITIES.filter((f) => !f.demo);       // 自動の一覧が入ったらデモは消す
-  const near = (a, b) => Math.abs(a.lat - b.lat) * 111000 < 50 && Math.abs(a.lng - b.lng) * 90000 < 50;
-  const ownCharge = own.filter((f) => f.type !== "merit");
-  window.FACILITIES = own.concat(auto.filter((a) => !ownCharge.some((o) => near(o, a))));
+/* ---------- 公式の一覧で確かめた施設（facilities_official.js）と、自動で取り込んだ一覧（chargers.js）と合わせる ----------
+   優先する順：ここに書いた施設 → 公式の一覧の施設 → OpenStreetMap の施設。近く（約100m以内）にある同じ施設は前のほうを使う */
+(function mergeFacilities() {
+  const official = window.OFFICIAL_FACILITIES || [], auto = window.AUTO_FACILITIES || [];
+  if (!official.length && !auto.length) return;               // どちらもないときはデモのまま
+  const near = (a, b) => Math.abs(a.lat - b.lat) * 111000 < 100 && Math.abs(a.lng - b.lng) * 90000 < 100;
+  let list = window.FACILITIES.filter((f) => !f.demo);        // 実データが入ったらデモは消す
+  [official, auto].forEach((src) => {
+    const charge = list.filter((f) => f.type !== "merit");
+    list = list.concat(src.filter((a) => !charge.some((o) => near(o, a))));
+  });
+  window.FACILITIES = list;
 })();
 
 window.COVERAGE = [

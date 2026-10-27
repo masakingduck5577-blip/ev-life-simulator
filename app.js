@@ -208,7 +208,7 @@ screens.cost = () => {
     </section>
     <section class="evlife" id="evlife"></section>
     <button class="mapguide" data-go="map"><span class="mg-pic">${pic("map",56)}<span class="mg-plug">${pic("plug",26)}</span></span>
-      <span class="mg-tx"><b>充電する場所は？ 地図でくわしく</b><span>家の近く・いつもの場所・旅行先までの充電スポットと、夏・冬で行けるかが分かります</span></span>
+      <span class="mg-tx"><b>充電する場所は？ 地図でくわしく</b><span>街の充電スポットと、あなたの使い方だと何日に1回充電するかが分かります</span></span>
       <span class="mg-go">地図を見る${CHEV_R}</span></button>
     <div class="cond" id="cond"></div>
     <details id="more"><summary>内訳と条件を詳しく見る</summary><div class="body" style="gap:20px">
