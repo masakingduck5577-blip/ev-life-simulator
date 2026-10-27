@@ -786,3 +786,7 @@ details.mini>summary{justify-content:flex-start}
 .rp-store .rs-row{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:15px}
 .rp-store .rs-row b{font-size:18px}
 .rp-store a.btn{text-decoration:none;display:flex;align-items:center;justify-content:center}
+.homeopts{display:flex;flex-direction:column;gap:8px}
+.homeopts .lsopt .tx{display:flex;flex-direction:column;gap:2px}
+.homeopts .lsopt small{font-size:12px;color:var(--sub);font-weight:400}
+.rcd>span{font-weight:700}

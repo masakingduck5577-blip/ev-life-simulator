@@ -7,6 +7,7 @@ const S = {
   gc_price:2500000, gc_fe:18, gc_tax:30500, gc_wt:7500,
   ec_price:4000000, ec_sub:0, ec_wh:150, ec_kwh:50, ec_tax:25000, ec_wt:0,
   homeCharge:true, homeShare:80, years:7,
+  homeEnv:"install",          // 自宅の充電："have"（設備がある）/ "install"（付ければできそう）/ "none"（できない）
   evAdj:0, gasAdj:0, evFees:0, gasFees:0,
   pGas:170, pHome:31, pPub:60, charger:150000, mGas:40000, mEv:25000, insGas:60000, insEv:60000,
   cSum:0.9, cWin:0.7, rGas:0.85, rEv:0.9, usable:70, scen:"mid",
@@ -160,6 +161,10 @@ screens.gas = () => {
       <div class="chips">${presets.map(v=>`<button type="button" class="chip" aria-pressed="${+S.annualKm===v}" data-act="setKm:${v}">${v.toLocaleString("ja-JP")}km</button>`).join("")}</div>
       <p class="hint" style="margin:0">分からなければ 8,000km（月に約670km）で計算できます</p>
     </section>
+    <section class="sec"><h2>${pic("house",28)} 自宅で充電できますか</h2>
+      <div class="lsopts homeopts" role="group" aria-label="自宅で充電できるか">${HOME_ENV.map(([k,t,d])=>`<button type="button" class="lsopt" aria-pressed="${S.homeEnv===k}" data-act="setHome:${k}"><span class="dot" aria-hidden="true"></span><span class="tx"><b>${t}</b><small>${d}</small></span></button>`).join("")}</div>
+      <p class="hint" style="margin:0">分からなければ「設備を付ければできそう」で計算できます</p>
+    </section>
     <section class="sec"><h2>${pic("fuel",28)} 燃費とガソリン代</h2>
       <div class="row2">
         <label class="f">ガソリン車の燃費（km/L）<input type="number" inputmode="decimal" data-k="gFe" value="${S.gFe!==""?S.gFe:(G?.fe??"")}" step="0.1" min="0"></label>
@@ -170,6 +175,13 @@ screens.gas = () => {
   </main>` + footer(btn("cost","結果を見る", !S.evKey));
 };
 screens.gas.update = () => document.querySelectorAll('[data-act^="setKm:"]').forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.act.split(":")[1] === +S.annualKm)));
+/* 自宅の充電環境：[値, 選択肢, 説明, 自宅で充電するか, 充電器の設置費] */
+const HOME_ENV = [
+  ["have", "できる（充電設備がある）", "家の電気で充電。設置費はかからない", true, 0],
+  ["install", "設備を付ければできそう", "戸建て・駐車場あり。充電器の設置費 約15万円を入れて計算", true, 150000],
+  ["none", "できない", "集合住宅・駐車場がないなど。外の充電スポットで計算", false, 0],
+];
+const homeEnvLabel = () => ({have:"できる（設備あり）", install:"設備を付ければできる", none:"できない"})[S.homeEnv] || (S.homeCharge ? "できる" : "できない");
 
 screens.ev = () => {
   const G = GASES[S.gasKey];
@@ -323,9 +335,9 @@ screens.cost.update = () => {
   const yen1000 = v => `${(Math.round(Math.abs(v)/1000)*1000).toLocaleString("ja-JP")}円`;
   const diffRow = (label, k, note) => { const d = gParts[k]-eParts[k]; return `<div class="rcd"><span>${label}</span><b class="num">${Math.abs(d)<500?"ほぼ同じ":`年 ${d>0?"−":"+"}${yen1000(d)}`}</b>${note?`<small>${note}</small>`:""}</div>`; };
   const kmax = Math.max(r.k100g, r.k100a, 1);
-  const road = (cls, img, label, v, sub) => `<div class="road ${cls}"><div class="rd-l">${pic(img,26)}<span>${label}</span></div>
+  const road = (cls, img, label, v) => `<div class="road ${cls}"><div class="rd-l">${pic(img,26)}<span>${label}</span></div>
       <div class="rd-track"><span class="rd-fill" style="width:${v/kmax*100}%"><span class="rd-car">${pic("car",34)}</span></span></div>
-      <div class="rd-v"><b class="num">${v.toFixed(1)}</b><span>km</span></div><small>${sub}</small></div>`;
+      <div class="rd-v"><b class="num">${v.toFixed(1)}</b><span>km</span></div></div>`;
   document.getElementById("p2").innerHTML = `<span class="pillpic">${pic("plug",64)}</span><div class="kick">乗るとき</div>
     <h2 class="ttl" id="p2t">${dM >= 0 ? `ランニングコストが<br>年 <em class="num">約${man(dM)}</em> <span class="nw">安い</span>` : `ランニングコストが<br>年 約${man(-dM)} 高い`}</h2>
     <div class="bars">
@@ -334,17 +346,17 @@ screens.cost.update = () => {
     </div>
     <div class="rclg">${RC.map(([l,c],k)=>`<span><i style="background:${k===0?"var(--ev)":c}"></i>${l}</span>`).join("")}</div>
     <div class="rcds">
-      ${diffRow(`${pic("fuel",22)}燃料・電気代`,0, `${rv}は燃費${r.G.fe}km/L（実際は約${(r.G.fe*(n("rGas")||1)).toFixed(1)}km/L）で計算`)}
-      ${diffRow(`${pic("yen",22)}税金`,1, `1年あたり 自動車税の差 ${(r.G.tax-r.E.tax).toLocaleString("ja-JP")}円・重量税の差 ${(r.G.wt-r.E.wt).toLocaleString("ja-JP")}円`)}
-      ${diffRow(`${pic("check",22)}メンテ・車検`,2, "エンジンオイル交換などがない（目安）")}
-      ${diffRow(`${pic("clipboard",22)}保険`,3, "同じ金額で計算（目安）")}
+      ${diffRow("燃料・電気代",0)}
+      ${diffRow("税金",1)}
+      ${diffRow("メンテ・車検",2)}
+      ${diffRow("保険",3)}
     </div>
     <div class="k100hero">
       <h2 class="k100h">${pic("coin",34)}100円で走れる距離</h2>
-      ${road("g","fuel",rv,r.k100g,`ガソリン ${n("pGas")}円/L・実際の燃費 約${r.feReal.toFixed(1)}km/L（カタログ${r.G.fe}km/L）`)}
-      ${road("e","plug","EV",r.k100a,`${S.homeCharge?`自宅${Math.round(n("homeShare"))}%・外で充電`:"外で充電"}・実際の電費 約${(1/r.eKwhKm).toFixed(1)}km/kWh（季節の平均）`)}
+      ${road("g","fuel",rv,r.k100g)}
+      ${road("e","plug","EV",r.k100a)}
     </div>
-    <p class="note">※ 金額は1年あたり（年${km.toLocaleString("ja-JP")}km${r.drive?"・電費は今日の走りから":""}）。メンテ・保険は目安です</p>`;
+    <p class="note">※ 年${km.toLocaleString("ja-JP")}km・${S.homeCharge?`自宅で充電${Math.round(n("homeShare"))}%`:"外で充電"}・ガソリン${n("pGas")}円/Lで計算。燃費・電費は実際に走るときの目安${r.drive?"（電費は今日の走りから）":""}、メンテ・保険も目安です。くわしくは下の「内訳と条件」</p>`;
 
   /* ③ 合わせると（見出しは上の sumtop） */
   document.getElementById("p3note").textContent = `${r.charger?`充電器の設置費${man(r.charger)}・`:""}税・メンテナンス・保険・売るときの価値（残価）を含めた実質負担で計算。「${rv}より安くなるのは」も同じ計算です`;
@@ -474,7 +486,7 @@ app.addEventListener("input", e => {
   if (k==="gasKey") S.gFe = "";
   if (k==="evKey") { S.gasKey = EVS[S.evKey]?.rival || "n-one"; S.gFe = ""; S.rivalType = "gas"; }
   if (["gasKey","evKey","kmMode","rivalType"].includes(k)) { if(k==="rivalType" && GASES[S.gasKey] && !GASES[S.gasKey].custom && GASES[S.gasKey].type!==S.rivalType) S.gasKey=""; render(true); return; }
-  if (k==="homeCharge"){ const w=document.getElementById("shareWrap"); if(w) w.hidden=!S.homeCharge; if(current==="area"){ render(true); return; } }
+  if (k==="homeCharge"){ S.homeEnv = S.homeCharge ? (S.homeEnv==="none" ? "install" : S.homeEnv) : "none"; const w=document.getElementById("shareWrap"); if(w) w.hidden=!S.homeCharge; if(current==="area"){ render(true); return; } }
   if (k==="homeShare"){ const o=document.getElementById("shareOut"); if(o) o.textContent=S.homeShare+"%"; }
   const ko = document.getElementById("kmOut"); if(ko) ko.textContent = `年間 約${Math.round(annualKm()).toLocaleString("ja-JP")}km として計算します`;
   screens[current].update?.();

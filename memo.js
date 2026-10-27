@@ -70,10 +70,10 @@ screens.drive.update = () => {
 const MEMO_ASKS = [
   { id: "subsidy", label: "補助金に間に合う納車の時期（12月までに登録できるか）", auto: (r) => r && r.E.sub > 0 },
   { id: "estimate", label: "見積もり・値引き・下取り", auto: (r) => r && r.diff >= 0 },
-  { id: "charger", label: "自宅に充電器を付ける費用と工事", auto: () => S.homeCharge },
-  { id: "apartment", label: "集合住宅での充電のしかた", auto: () => !S.homeCharge },
+  { id: "charger", label: "自宅に充電器を付ける費用と工事", auto: () => S.homeEnv === "install" },
+  { id: "apartment", label: "家で充電できないときの充電のしかた", auto: () => !S.homeCharge },
   { id: "winter", label: "冬の電費と、走れる距離", auto: () => true },
-  { id: "spots", label: "近くの充電スポット" },
+  { id: "spots", label: "近くの充電スポット", auto: () => !S.homeCharge },
   { id: "longtrip", label: "長距離・旅行のときの充電", auto: () => S.tripRes?.status === "done" },
   { id: "battery", label: "電池の寿命と保証" },
   { id: "resale", label: "売るときの価値（残価）" },
@@ -137,7 +137,7 @@ screens.memo = () => {
       <div class="rp-tiles">
         <div class="big"><span>1年に走る距離</span><b class="num">${km.toLocaleString("ja-JP")}<small>km</small></b></div>
         <div><span>お住まい</span><b>${L ? esc(L.name) : "―"}</b></div>
-        <div><span>自宅での充電</span><b>${S.homeCharge ? `できる（${Math.round(n("homeShare"))}%）` : "できない"}</b></div>
+        <div><span>自宅での充電</span><b>${homeEnvLabel()}</b></div>
         <div><span>乗る年数</span><b>${r.N}年</b></div>
         <div><span>ガソリン車の燃費</span><b>${r.G.fe}km/L</b></div>
         <div><span>ガソリン代</span><b>${n("pGas")}円/L</b></div>
@@ -189,7 +189,7 @@ screens.memo.update = () => {};
 const S_DEFAULT = JSON.parse(JSON.stringify(S));
 const SHARE_KEYS = ["rivalType", "gasKey", "evKey", "kmMode", "annualKm", "monthlySpend", "curFe",
   "gc_price", "gc_fe", "gc_tax", "gc_wt", "ec_price", "ec_sub", "ec_wh", "ec_kwh", "ec_tax", "ec_wt",
-  "homeCharge", "homeShare", "years", "evAdj", "gasAdj", "evFees", "gasFees",
+  "homeCharge", "homeEnv", "homeShare", "years", "evAdj", "gasAdj", "evFees", "gasFees",
   "pGas", "pHome", "pPub", "charger", "mGas", "mEv", "insGas", "insEv", "gFe", "city", "cSum", "cWin", "rGas", "rEv", "usable", "scen",
   "dCar", "dKm", "dSoc0", "dSoc1", "dSeason", "dUse", "memoAsks", "memoNote"];
 const b64e = (s) => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
@@ -223,6 +223,7 @@ const memoMsg = (t) => { const m = document.getElementById("memoMsg"); if (m) m.
 Object.assign(ACT, {
   driveApply() { if (driveResult().state !== "ok") return; S.dUse = true; S.evKey = S.dCar; S.gasKey = EVS[S.dCar]?.rival || "n-one"; S.rivalType = "gas"; go("gas"); },
   driveOff() { S.dUse = false; render(true); },
+  setHome(v) { const e = HOME_ENV.find((x) => x[0] === v); if (!e) return; S.homeEnv = v; S.homeCharge = e[3]; S.charger = e[4]; render(true); },
   setKm(v) { S.annualKm = +v; S.kmMode = "direct"; render(true); },
   memoAsk(id) { S.memoAsks = { ...S.memoAsks, [id]: !S.memoAsks[id] }; render(true); },
   subPer(v) { S.subPeriod = v === "dec" ? "dec" : "2027"; render(true); },
@@ -316,7 +317,7 @@ function drawMemoCanvas(r, imgs) {
       text(km.toLocaleString("ja-JP"), ix + 24, Y + h + 110, font(64, 700), C.red);
       x.font = font(64, 700); const kw = x.measureText(km.toLocaleString("ja-JP")).width; text("km", ix + 32 + kw, Y + h + 110, font(30, 700), C.sub); }
     h += 130 + 16;
-    const tiles = [["お住まい", L ? L.name : "―"], ["自宅での充電", S.homeCharge ? `できる（${Math.round(n("homeShare"))}%）` : "できない"], ["乗る年数", `${r.N}年`], ["ガソリン車の燃費", `${r.G.fe}km/L`], ["ガソリン代", `${n("pGas")}円/L`]];
+    const tiles = [["お住まい", L ? L.name : "―"], ["自宅での充電", homeEnvLabel()], ["乗る年数", `${r.N}年`], ["ガソリン車の燃費", `${r.G.fe}km/L`], ["ガソリン代", `${n("pGas")}円/L`]];
     if (r.drive) tiles.push(["EVの電費（今日の走り）", `1kWhで${r.drive.kmPerKwh.toFixed(1)}km`]);
     const tw = (iw - 16) / 2;
     tiles.forEach(([k, v], i) => { const tx = ix + (i % 2) * (tw + 16), ty = Y + h + Math.floor(i / 2) * 126;
