@@ -161,11 +161,11 @@ screens.lifestyle = () => {
    ========================================================= */
 function lsCardHtml(c, strong) {
   const m = lsMetric(c);
-  const needsGear = c.carNotes ? `<span class="lswarn"><span class="flag">要確認</span>車種によって必要な機器があります</span>` : "";
+  const needsGear = c.carNotes ? `<span class="lswarn">車種によって必要な機器があります（お店で確認できます）</span>` : "";
   const metric = m ? `<span class="lsmetric${m.value ? "" : " soft"}"><span>${esc(m.label)}</span>${m.value ? `<b class="num">${esc(m.value)}</b>` : ""}</span>` : "";
   return `<button type="button" class="lscard${strong ? " top" : ""}" data-act="lsOpen:${esc(c.id)}">
     <span class="lshead"><span class="lsic">${lsIcon(c.icon)}</span><span class="lst"><span class="why">${esc(c.reasons.join("・"))} に合う</span><b>${esc(c.title)}</b></span></span>
-    <span class="lsbody">${esc(c.body)}</span>${metric}${needsGear}${c.draft ? '<span class="hint">内容は仮です</span>' : ""}</button>`;
+    <span class="lsbody">${esc(c.body)}</span>${metric}${needsGear}</button>`;
 }
 screens.effect = () => {
   const list = lsRanked();
@@ -212,7 +212,7 @@ screens.lscard = () => {
     ${m && m.value ? `<section class="sec"><h2>数字で見ると</h2><div class="lsstat"><span>${esc(m.label)}</span><b class="num">${esc(m.value)}</b>${m.sub ? `<small>${esc(m.sub)}</small>` : ""}</div></section>` : ""}
     ${cars}
     ${c.note ? `<div class="info"><b>知っておきたいこと</b><br>${esc(c.note)}</div>` : ""}
-    ${c.draft ? '<p class="hint">このカードの内容は仮です。チームで確認中です。</p>' : ""}
+    <p class="hint">内容は一般的な目安です。くわしくはお店で確認できます。</p>
   </main>` + footer(
     c.cta ? `<button class="btn" data-act="lsCta:${c.cta.to}">${esc(c.cta.label || "次へ")}</button>` : "",
     btn2("cost", "シミュレーション結果に戻る"),

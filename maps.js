@@ -279,10 +279,11 @@ screens.map = () => {
   const ICON_PIN = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
   return header("充電する場所", "cost", "マップ") + `<main class="main">
     <div class="hero"><div class="herorow" aria-hidden="true">${pic("map",64)}${pic("plug",48)}</div><h1>充電して、<br>どこまで行ける？</h1></div>
+    ${homeChargeCard()}
     ${card("area", pic("house", 40), "transparent", "var(--ev)", "いつもの暮らし", "家・職場・よく行く場所", "", ["夏・冬で行ける？", "近くの充電"], true)}
     ${card("trip", pic("onsen", 40), "transparent", "var(--gas)", "おでかけ・旅行", "日光・那須など", "", ["途中の充電", "充電代"], false)}
-    <div class="compare" style="background:var(--bg)"><div><div class="k" style="color:var(--sub)">試算に使うEV${car.isDefault ? "（未選択のため仮）" : "（車両情報 B から）"}</div><div class="n">${esc(car.name)}</div></div><button class="lk" data-go="ev" style="margin:0">変更</button></div>
-    <button type="button" class="hcard" data-go="chargers"><span class="hpic">${pic("plug",40)}</span><span class="tx"><span class="t">充電施設の一覧</span><span class="d">${chgMetaText()}</span></span><span style="color:var(--sub)">${CHEV_R}</span></button>
+    <div class="compare" style="background:var(--bg)"><div><div class="k" style="color:var(--sub)">試算に使うEV${car.isDefault ? "（EVを選ぶと、その車で計算します）" : ""}</div><div class="n">${esc(car.name)}</div></div><button class="lk" data-go="ev" style="margin:0">変更</button></div>
+    <button type="button" class="hcard" data-go="chargers"><span class="hpic">${pic("plug",40)}</span><span class="tx"><span class="t">外で充電できる場所</span><span class="d">遠出のときに使う急速充電など（地図に登録されている施設の一部）</span></span><span style="color:var(--sub)">${CHEV_R}</span></button>
     <p class="hint">地図データ © OpenStreetMap contributors</p>
   </main>` + footer(btn2("cost", "シミュレーション結果に戻る"));
 };
@@ -291,11 +292,21 @@ screens.map = () => {
    画面：充電施設の一覧（Honda Charge とそれ以外）
    ========================================================= */
 const DEALER = { lat: 36.572, lng: 139.98, label: "ゆいの杜店" };   // 並べる基準（自宅を登録していれば自宅）
+/* 施設の数は出さない（地図データに登録されているのは一部だけのため） */
 function chgMetaText() {
   const M = window.AUTO_FACILITIES_META;
-  const list = FAC().filter((f) => f.type !== "merit");
-  const hc = list.filter(isHC).length;
-  return M ? `${list.length}か所（うち Honda Charge ${hc}か所）・${jpDate(M.updatedAt)}に自動更新` : `${list.length}か所（自動の一覧はまだ取り込まれていません）`;
+  return `地図に登録されている施設の一部です${M ? `（${jpDate(M.updatedAt)}更新）` : ""}`;
+}
+/* 充電の中心は自宅。結果画面の計算から、家での充電のイメージを出す */
+function homeChargeCard() {
+  const r = typeof calc === "function" && S.evKey ? calc() : null;
+  const share = S.homeCharge ? Math.round(n("homeShare")) : 0;
+  const vals = r ? `<div class="hc-v"><div><span>充電の回数（春・秋）</span><b class="num">${esc(r.fq.mid.replace(/（.*$/, ""))}</b></div><div><span>電気代（月の平均）</span><b class="num">約${(Math.round(r.evEnergy / 12 / 100) * 100).toLocaleString("ja-JP")}円</b></div></div>` : "";
+  return S.homeCharge || !r ? `<section class="homecharge"><div class="hc-h">${pic("house", 48)}<b>充電の基本は、家で夜のあいだに</b></div>
+      <ul><li>寝ているあいだに充電して、朝は満充電で出かけられます</li><li>ガソリンスタンドに寄る時間がいりません</li><li>外で充電するのは、遠出のときが中心です</li></ul>${vals}
+      ${r ? `<p class="hint" style="margin:0">年${Math.round(r.km).toLocaleString("ja-JP")}km・自宅で充電${share}%として計算</p>` : ""}</section>`
+    : `<section class="homecharge"><div class="hc-h">${pic("plug", 48)}<b>家で充電できないときは、外での充電が中心</b></div>
+      <ul><li>買い物などのついでに、近くの急速充電を使います</li><li>集合住宅は、充電器を付けられるかお店で相談できます</li></ul>${vals}</section>`;
 }
 screens.chargers = () => {
   const base = S.home ? { lat: S.home.lat, lng: S.home.lng, label: "自宅" } : DEALER;
@@ -305,19 +316,19 @@ screens.chargers = () => {
   const list = all.filter(F[S.chgFilter][1]).filter((f) => !q || `${f.name} ${f.note || ""} ${f.network || ""}`.toLowerCase().includes(q))
     .map((f) => ({ f, d: haversine([base.lat, base.lng], [f.lat, f.lng]) / 1000 }))
     .sort((a, b) => (isHC(b.f) - isHC(a.f)) || a.d - b.d);
-  const chips = Object.entries(F).map(([k, [l, fn]]) => `<button type="button" class="chip${k === "honda" ? " k-honda" : ""}" aria-pressed="${S.chgFilter === k}" data-act="chgFilter:${k}">${l} ${all.filter(fn).length}</button>`).join("");
+  const chips = Object.entries(F).map(([k, [l, fn]]) => `<button type="button" class="chip${k === "honda" ? " k-honda" : ""}" aria-pressed="${S.chgFilter === k}" data-act="chgFilter:${k}">${l}</button>`).join("");
   const rows = list.slice(0, S.chgShow).map(({ f, d }) => facRow(f, `${esc(facSpec(f))}・${base.label}から約${d < 10 ? d.toFixed(1) : Math.round(d)}km${f.hours ? `・${esc(f.hours)}` : ""}`)).join("");
   const M = window.AUTO_FACILITIES_META;
   const hcCount = all.filter(isHC).length;
-  return header("充電施設の一覧", "map", "C 施設") + `<main class="main">
-    <div class="sec"><p class="sd" style="margin:0">${chgMetaText()}。Honda Charge を先頭に、${base.label}から近い順に並べています。</p></div>
+  return header("外で充電できる場所", "map", "施設") + `<main class="main">
+    <div class="sec"><p class="sd" style="margin:0">${chgMetaText()}。${base.label}から近い順に並べています。ふだんの充電は自宅が中心で、ここは遠出のときなどに使う場所です。</p></div>
     <div class="chips" role="group" aria-label="絞り込み">${chips}</div>
     <form class="search" data-form="chgSearch" role="search"><input type="search" data-q="chgQ" value="${esc(S.chgQ)}" placeholder="施設名・地名で探す" aria-label="施設名で探す"><button type="submit">探す</button></form>
-    ${!hcCount ? '<div class="info">Honda Charge の設置場所は、Hondaの公式アプリでのみ公開されています。自動の一覧（OpenStreetMap）に Honda Charge と登録された施設がまだないため、表示されていません。アプリで見つけた場所は facilities.js に追加できます。</div>' : ""}
+    <div class="info">Honda Charge の設置場所は、Hondaの公式アプリで確認できます。</div>
     ${demoNote()}
     <div style="display:flex;flex-direction:column;gap:8px">${rows || '<p class="hint">当てはまる施設はありません</p>'}</div>
-    ${list.length > S.chgShow ? `<button class="btn2" data-act="chgMore">さらに表示（残り${list.length - S.chgShow}か所）</button>` : ""}
-    <p class="hint">施設データ：OpenStreetMap（© OpenStreetMap contributors, ODbL）を毎週自動で取り込み、チームで確かめた施設（facilities.js）と合わせています${M ? `。対象：${M.prefectures.includes("JP-09") ? "栃木県" : ""}${M.prefectures.length > 1 ? `ほか${M.prefectures.length - 1}県` : ""}` : ""}。一覧は chargers.csv でも見られます。</p>
+    ${list.length > S.chgShow ? `<button class="btn2" data-act="chgMore">さらに表示</button>` : ""}
+    <p class="hint">施設データ：OpenStreetMap（© OpenStreetMap contributors, ODbL）。すべての充電施設が載っているわけではありません。</p>
   </main>`;
 };
 Object.assign(ACT, {
@@ -398,7 +409,7 @@ screens.areamap = () => {
       <span class="tx"><b>${esc(t.label)}</b><span>${t.freqLabel}・往復 ${t.rtKm.toFixed(1)}km</span>
       <span class="badges">${[t.seasons[1], t.seasons[2]].map((s) => `<span class="bdg ${s.ok ? "ok" : "ng"}">${s.label} ${s.ok ? "充電なし" : "途中で充電"}</span>`).join("")}<span class="bdg mute">充電${t.along.length + t.near.length}・得${t.merit.length}</span></span></span></button>`).join("");
     body = `<div class="verdict good">
-        <span class="lead">あなたの生活圏のまとめ（${esc(d.car.name)}${d.car.isDefault ? "・仮" : ""}）</span>
+        <span class="lead">あなたの生活圏のまとめ（${esc(d.car.name)}）</span>
         <span class="big num" style="font-size:22px">週 約${Math.round(d.weekKm)}km、充電は週${d.chargesWeek.toFixed(1)}回</span>
         <span class="sub">${S.homeCharge ? `移動の${Math.round(d.coverPct)}%は、冬でも自宅の充電だけでまかなえます` : `自宅で充電できないため、外での充電が週${d.chargesWeek.toFixed(1)}回ほど必要です`}（冬は週${d.chargesWeekWin.toFixed(1)}回）</span>
         <span class="sub">登録した場所と頻度から、年間 約${(Math.round(d.annualKm / 100) * 100).toLocaleString("ja-JP")}km と推定</span>
@@ -507,7 +518,7 @@ screens.trip = () => {
     ${sl("startSoc", "出発時の充電量", 20, 100, 5, "%", "前の晩に自宅で満充電なら100%")}
     <label class="chk"><input type="checkbox" data-t="destCharge"${T.destCharge ? " checked" : ""}>${T.overnight ? "宿泊先で充電できる" : "目的地で滞在中に充電できる"}</label>
     <div class="info">${sl("reserve", "これより減らさない残量（安心ライン）", 10, 40, 5, "%")}</div>
-  </main>` + footer(btn("tripres", "ルートと充電施設を見る", !(S.home && T.dest)), `<p class="hint" style="text-align:center;margin:0">EV：${esc(car.name)}${car.isDefault ? "（車両情報 B で未選択のため仮）" : ""}</p>`);
+  </main>` + footer(btn("tripres", "ルートと充電施設を見る", !(S.home && T.dest)), `<p class="hint" style="text-align:center;margin:0">EV：${esc(car.name)}</p>`);
 };
 
 /* =========================================================
@@ -635,8 +646,8 @@ screens.tripplan = () => {
         <div class="kvrow" style="font-size:15px"><b>合計</b><b class="num e">約${yen(c.total)}</b></div>
       </div>
       <div class="kv"><div class="c" style="background:var(--ev-t);border:0"><span class="l e" style="font-weight:700">EV（${esc(R.car.name)}）</span><span class="v num">約${yen(c.total)}</span></div>
-        <div class="c" style="background:var(--gas-t);border:0"><span class="l g" style="font-weight:700">ガソリン車なら（${esc(R.gasName)}${R.gasDefault ? "・仮" : ""}）</span><span class="v num">約${yen(c.gas)}</span></div></div>
-      <p class="hint">急速充電は時間ごとの料金が多いため、kWhあたりに換算した概算です。比べるガソリン車は車両情報（B）で選んだ車種、未選択ならN-ONEで計算しています。</p>
+        <div class="c" style="background:var(--gas-t);border:0"><span class="l g" style="font-weight:700">ガソリン車なら（${esc(R.gasName)}）</span><span class="v num">約${yen(c.gas)}</span></div></div>
+      <p class="hint">急速充電は時間ごとの料金が多いため、kWhあたりに換算した概算です。比べるガソリン車は、コスト比較と同じ車種で計算しています。</p>
     </section>
   </main>` + footer(btn2("cost", "シミュレーション結果に戻る"), btn2("trip", "条件を変える"));
 };

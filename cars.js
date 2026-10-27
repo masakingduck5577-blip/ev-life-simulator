@@ -5,16 +5,16 @@
    acKw: 普通充電で受け入れられる最大出力（kW）※仮置き・要確認
    ========================================================= */
 const EVS = {
-  "n-one-e":  {kei:true, rival:"n-one", pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", range:295, name:"N-ONE e:（e:G）", cat:"軽乗用EV", price:2699400, sub:580000, wh:105, kwh:29.6, tax:10800, wt:0, qkw:50, acKw:6, ok:true},
-  "super-one":{rival:"fit-gas", pic:"car", seats:"4人", size:"小型", use:"走りを楽しむ", range:274, name:"Super-ONE", cat:"小型EV", price:3390200, sub:1300000, wh:113, kwh:29.6, tax:25000, wt:0, qkw:50, acKw:6, ok:false},
-  "insight":  {rival:"zrv-gas", pic:"suv", seats:"5人", size:"SUV", use:"家族で遠出", range:535, name:"INSIGHT", cat:"クロスオーバーSUV EV", price:5500000, sub:1300000, wh:134, kwh:68.8, tax:25000, wt:0, qkw:150, acKw:6, ok:true},
-  "n-van-e":  {kei:true, rival:"n-van", pic:"van", seats:"1〜4人（グレードによる）", size:"軽バン", use:"仕事・趣味の荷物", range:245, name:"N-VAN e:", cat:"軽商用EV", price:2600000, sub:580000, wh:126, kwh:29.6, tax:5000, wt:0, qkw:50, acKw:6, ok:false},
+  "n-one-e":  {kei:true, rival:"n-one", pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", range:295, name:"N-ONE e:（e:G）", cat:"軽乗用EV", price:2699400, sub:580000, sub2027:458000, wh:105, kwh:29.6, tax:10800, wt:0, qkw:50, acKw:6, ok:true},
+  "super-one":{rival:"fit-gas", pic:"car", seats:"4人", size:"小型", use:"走りを楽しむ", range:274, name:"Super-ONE", cat:"小型EV", price:3390200, sub:1300000, sub2027:780000, wh:113, kwh:29.6, tax:25000, wt:0, qkw:50, acKw:6, ok:false},
+  "insight":  {rival:"zrv-gas", pic:"suv", seats:"5人", size:"SUV", use:"家族で遠出", range:535, name:"INSIGHT", cat:"クロスオーバーSUV EV", price:5500000, sub:1300000, sub2027:780000, wh:134, kwh:68.8, tax:25000, wt:0, qkw:150, acKw:6, ok:true},
+  "n-van-e":  {kei:true, rival:"n-van", pic:"van", seats:"1〜4人（グレードによる）", size:"軽バン", use:"仕事・趣味の荷物", range:245, name:"N-VAN e:", cat:"軽商用EV", price:2600000, sub:580000, sub2027:458000, wh:126, kwh:29.6, tax:5000, wt:0, qkw:50, acKw:6, ok:false},
   "custom":   {name:"その他のEV", cat:"スペックを入力", custom:true}
 };
 /* rival：比べる「同じクラスのガソリン車」（GASES の名前）。画面では車を選ばせず、ここで自動で決める
-   seats・size・use：車を選ぶ画面に出す「使い方の印象」。range：一充電走行距離（WLTC、メーカー発表）
+   seats・size・use：車を選ぶ画面に出す「使い方の印象」。range：一充電走行距離（WLTC、メーカー発表のカタログ値）
    pic：画面に出すイラスト（images.js の名前）。写真を使うときは photo:"ファイル名" を足す
-   比べる相手の車。type は "gas"（ガソリン車）/ "hv"（ハイブリッド車）。価格・燃費は仮の値 */
+   比べる相手の車。type は "gas"（ガソリン車）/ "hv"（ハイブリッド車）。価格・燃費は同じクラスの目安 */
 const GASES = {
   "n-one": {pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", name:"N-ONE", cat:"軽乗用", type:"gas", price:1800000, fe:23, tax:10800, wt:3300},
   "n-box": {pic:"car", seats:"4人", size:"軽（背が高い）", use:"室内が広い・子育て", name:"N-BOX", cat:"軽乗用", type:"gas", price:1800000, fe:21, tax:10800, wt:3300},
@@ -27,9 +27,11 @@ const GASES = {
 };
 const RIVAL_LABEL = {gas:"ガソリン車", hv:"ハイブリッド車"};
 const RIVAL_SHORT = {gas:"ガソリン車", hv:"ハイブリッド車"};
-const DEP = { gas:{hi:0.12, mid:0.15, lo:0.18}, ev:{hi:0.15, mid:0.19, lo:0.23} }; // 年率の価値減少（仮）
+/* 売るときの価値（残価）＝車両価格×(1−年率)^年数。
+   EVは中古車の値段が下がりやすい傾向があるので、ガソリン車より年率を大きくしている（目安） */
+const DEP = { gas:{hi:0.12, mid:0.15, lo:0.18}, ev:{hi:0.15, mid:0.19, lo:0.23} };
 const SCEN_LABEL = {hi:"高め", mid:"中間", lo:"低め"};
-const SUBSIDY_HOLD_YEARS = 4;
+const SUBSIDY_HOLD_YEARS = 4;   // 処分制限期間（自家用）。これより早く手放すと補助金の一部返納が必要な場合がある
 
 /* =========================================================
    レンタカー（木村さんのアプリ）への移動先
@@ -52,7 +54,9 @@ const RENTAL = {
    ========================================================= */
 const SUBSIDY = {
   name: "国のCEV補助金（令和7年度補正）",
-  amountAsOf: "2026-10-13",            // 車種ごとの金額を確かめた日（センターの表の日付）
+  amountAsOf: "2026-10-21",            // 車種ごとの金額を確かめた日（センターの表の日付）
+  cutDate: "2027-01-01",               // この日以降に登録すると補助金が減る（EVS の sub2027 を使う）
+  finalDeadline: "2027-02-12",         // 申請の最終締切（予算がなくなればその前に終わる）
   endText: "2026年12月上旬〜下旬",       // 受付終了の見込み（センターの発表どおりに書く）
   endFrom: "2026-12-01",               // 見込みの早いほう（残り日数はここまでで数える）
   endTo: "2026-12-31",                 // 見込みの遅いほう（これを過ぎたら「終了した可能性」と表示）
@@ -64,7 +68,12 @@ const jpDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return `
 const subsidyNote = () => SUBSIDY.closed
   ? `${SUBSIDY.name}は受付を終了しています（自動確認：${jpDate(SUBSIDY.checkedAt || SUBSIDY.amountAsOf)}）。自治体の補助は別途確認。`
   : `${SUBSIDY.name}。車種ごとの金額は${jpDate(SUBSIDY.amountAsOf)}時点${SUBSIDY.checkedAt ? `（${jpDate(SUBSIDY.checkedAt)}に自動確認）` : ""}。予算がなくなりしだい受付終了。自治体の補助は別途確認。`;
-const subOf = (d) => SUBSIDY.closed ? 0 : (d.sub || 0);
+/* どちらの登録時期で計算するか。"2027"：2027年1月以降に登録（初期値）／"dec"：2026年12月までに登録 */
+const afterCut = () => new Date() >= new Date(SUBSIDY.cutDate + "T00:00:00");
+const subPeriod = () => afterCut() ? "2027" : ((typeof S !== "undefined" && S.subPeriod === "dec") ? "dec" : "2027");
+const subDec = (d) => d.sub || 0;
+const sub2027 = (d) => (d.sub2027 ?? d.sub) || 0;
+const subOf = (d) => SUBSIDY.closed ? 0 : (subPeriod() === "dec" ? subDec(d) : sub2027(d));
 
 /* 受付終了までの状況。today を渡すとその日で判定（テスト用） */
 function subsidyStatus(today) {

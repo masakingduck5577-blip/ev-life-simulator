@@ -167,28 +167,67 @@ def parse_table_asof(text: str):
     return jp_iso(reiwa(int(m.group(1))), m.group(2), m.group(3)) if m else None
 
 
-NUM = re.compile(r"(?<![\w.\-])(\d{1,2},\d{3}|\d{3,4})(?![\w.])")
+TOKEN = re.compile(r"\d[\d,]*(?:\s*年)?")
+AMOUNT_K = (50, 2000)  # 補助金額の列は千円単位。この範囲の数字だけを金額とみなす
 
 
-def parse_amounts(text: str, today: dt.date):
-    """表の文字からHonda車の補助金額（円）を読む。表の数字は千円単位。
-    1行に「登録日の期間ごと × 自家用／貸自動車業用」の数字が並ぶので、
-    今日がR9.1.1より前なら1つ目（今の期間の自家用）、以降なら3つ目を使う。"""
+def row_amounts(line: str):
+    """表の1行から（今の期間の金額, 2027年1月以降の金額）を円で返す。
+    1行の並び：車両コード → 定価(円) → 補助金額(千円) R8.4.1~R8.12.31 → R9.1.1以降 → 処分制限期間(◯年)
+    定価（10万以上の数字）を目印にして、その後ろの千円単位の数字だけを読む。
+    車両コード（1020 など）や「4年」は金額として読まない。"""
+    toks = TOKEN.findall(line)
+    vals = []
+    for t in toks:
+        if "年" in t:
+            continue
+        v = t.replace(",", "").strip()
+        if v.isdigit():
+            vals.append(int(v))
+    price_i = next((i for i, v in enumerate(vals) if v >= 100_000), None)
+    if price_i is None:
+        return None
+    ams = [v for v in vals[price_i + 1:] if AMOUNT_K[0] <= v <= AMOUNT_K[1]]
+    if not ams:
+        return None
+    # 期間ごとに「自家用・貸自動車業用」の2列が並ぶ表なら 1つ目と3つ目、そうでなければ 1つ目と2つ目
+    now = ams[0] * 1000
+    later = (ams[2] if len(ams) >= 4 else ams[1] if len(ams) >= 2 else None)
+    return now, (later * 1000 if later else None)
+
+
+def parse_amounts(text: str, today: dt.date = None):
+    """表の文字からHonda車の補助金額（円）を読む。返り値：{key: (今の期間, 2027年1月以降)}"""
     lines = [norm(l) for l in text.splitlines()]
-    col = 2 if today >= dt.date(2027, 1, 1) else 0
     found = {}
     for key, (name, grade) in CARS.items():
         for ln in lines:
             if name not in ln or (grade and not re.search(re.escape(grade) + r"(?![\w])", ln)):
                 continue
-            nums = [int(x.replace(",", "")) * 1000 for x in NUM.findall(ln.split(name, 1)[1])]
-            if len(nums) > col and AMOUNT_RANGE[0] <= nums[col] <= AMOUNT_RANGE[1]:
-                found[key] = nums[col]
-                break
-            if nums and AMOUNT_RANGE[0] <= nums[0] <= AMOUNT_RANGE[1]:
-                found[key] = nums[0]
+            got = row_amounts(ln.split(name, 1)[1])
+            if got:
+                found[key] = got
                 break
     return found
+
+
+# 車種ごとに「ありえる金額」の範囲。外れたら読み間違いとみなして使わない
+SANE = {
+    "n-one-e": (200_000, 800_000),
+    "n-van-e": (200_000, 800_000),
+    "super-one": (300_000, 1_500_000),
+    "insight": (300_000, 1_500_000),
+}
+MAX_CHANGE = 0.30  # 前回より3割以上変わったら自動では反映せず、Issueで知らせる
+
+
+def check_amount(key, new, old):
+    lo, hi = SANE.get(key, AMOUNT_RANGE)
+    if not (lo <= new <= hi):
+        return f"{key}：読み取った金額 {new:,}円 はありえない範囲なので使いませんでした"
+    if old and abs(new - old) / old > MAX_CHANGE:
+        return f"{key}：金額が {old:,}円 → {new:,}円 と大きく変わったので、自動では反映していません（表を確かめて、正しければ subsidy.js を手で直してください）"
+    return None
 
 
 def parse_closed(page_text: str):
@@ -229,6 +268,7 @@ def main():
     today = dt.datetime.now(JST).date()
     prev = load_prev() or {"subsidy": {}, "amounts": {}, "sources": {}}
     sub, amounts, sources = dict(prev.get("subsidy") or {}), dict(prev.get("amounts") or {}), dict(prev.get("sources") or {})
+    amounts2027 = dict(prev.get("amounts2027") or {})
     errors = []
 
     raw = decode_html(fetch(PAGE_URL))
@@ -282,7 +322,18 @@ def main():
     if best:
         got = parse_amounts(best[2], today)
         missing = [k for k in CARS if k not in got]
-        amounts.update(got)
+        for k, (now_v, later_v) in got.items():
+            msg = check_amount(k, now_v, amounts.get(k))
+            if msg:
+                errors.append(msg)
+            else:
+                amounts[k] = now_v
+            if later_v:
+                msg = check_amount(k, later_v, amounts2027.get(k))
+                if msg:
+                    errors.append("（2027年1月以降）" + msg)
+                else:
+                    amounts2027[k] = later_v
         sub["amountAsOf"] = parse_table_asof(best[2]) or sub.get("amountAsOf")
         sources["table"] = best[1]
         if missing:
@@ -290,9 +341,9 @@ def main():
     else:
         errors.append("今日の登録日に当てはまる「銘柄ごとの補助金交付額」の表が見つかりませんでした")
 
-    data = {"subsidy": sub, "amounts": amounts, "sources": sources}
-    before = {"subsidy": prev.get("subsidy") or {}, "amounts": prev.get("amounts") or {}}
-    changed = before != {"subsidy": sub, "amounts": amounts}
+    data = {"subsidy": sub, "amounts": amounts, "amounts2027": amounts2027, "sources": sources}
+    before = {"subsidy": prev.get("subsidy") or {}, "amounts": prev.get("amounts") or {}, "amounts2027": prev.get("amounts2027") or {}}
+    changed = before != {"subsidy": sub, "amounts": amounts, "amounts2027": amounts2027}
     data["updatedAt"] = today.isoformat() if changed else prev.get("updatedAt", today.isoformat())
     data["checkedAt"] = data["updatedAt"]
     if changed or not os.path.exists(OUT_JS):
@@ -308,6 +359,9 @@ def main():
         for k in sorted(set(before["amounts"]) | set(amounts)):
             if before["amounts"].get(k) != amounts.get(k):
                 lines.append(f"- {k} の補助金額: {before['amounts'].get(k)} → **{amounts.get(k)}**")
+        for k in sorted(set(before["amounts2027"]) | set(amounts2027)):
+            if before["amounts2027"].get(k) != amounts2027.get(k):
+                lines.append(f"- {k} の補助金額（2027年1月以降）: {before['amounts2027'].get(k)} → **{amounts2027.get(k)}**")
         if sub.get("closed"):
             lines.append("\n**補助金の受付が終了した可能性があります。** アプリでは補助金を0円として計算します。")
         lines.append("\nアプリ（subsidy.js）は自動で更新しました。念のため、ページで内容を確かめてください。")

@@ -754,3 +754,35 @@ details.mini>summary{justify-content:flex-start}
 .savecard .btn{gap:8px}
 .ft2 .b-t{white-space:nowrap;font-size:15px}.ft2 .b-t .pic{width:18px;height:18px}.ft2 .btn{padding:6px 8px}
 .rcd b{color:#fff}
+
+/* ---- 2026-10-27 評価を受けた修正 ---- */
+.p1sub{margin:-4px 0 0;font-size:13px;color:var(--sub)}
+.p1sub b{color:#fff;font-size:15px}
+.subper{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.subper .per{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:56px;padding:8px 12px;border-radius:12px;border:1.5px solid var(--line);background:#1A1B1F;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.subper .per span{font-size:12px;font-weight:700;color:var(--sub)}
+.subper .per b{font-size:17px}
+.subper .per[aria-pressed="true"]{border-color:#E0352F;background:rgba(224,53,47,.14)}
+.subper .per[aria-pressed="true"] span{color:#fff}
+.subper .per:focus-visible,.subtomemo:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.sr-d span{line-height:1.5}
+.sr-n b{color:#fff}
+.subtomemo{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;border-radius:14px;border:1.5px solid #E0352F;background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.subtomemo span{display:flex;flex-direction:column;gap:2px;flex:1}
+.subtomemo b{font-size:14px}
+.subtomemo small{font-size:12px;color:var(--sub)}
+.subtomemo:hover{background:rgba(224,53,47,.12)}
+.st-warn{margin-top:10px;padding:10px 14px;border-radius:14px;border:1px solid rgba(255,200,80,.5);background:rgba(255,200,80,.08);font-size:12px;line-height:1.6;color:var(--ink)}
+.st-warn b{display:block;font-size:13px;color:#FFD27A}
+.homecharge{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:20px;background:var(--panel);border:1.5px solid var(--ev)}
+.homecharge .hc-h{display:flex;align-items:center;gap:12px}
+.homecharge .hc-h b{font-size:18px;line-height:1.4}
+.homecharge ul{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px;font-size:14px;line-height:1.6}
+.homecharge .hc-v{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.homecharge .hc-v div{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:14px;background:var(--panel2)}
+.homecharge .hc-v span{font-size:12px;color:var(--sub);font-weight:700}
+.homecharge .hc-v b{font-size:18px}
+.rp-store{display:flex;flex-direction:column;gap:10px}
+.rp-store .rs-row{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:15px}
+.rp-store .rs-row b{font-size:18px}
+.rp-store a.btn{text-decoration:none;display:flex;align-items:center;justify-content:center}

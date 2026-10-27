@@ -68,7 +68,7 @@ screens.drive.update = () => {
    auto : 試算の結果から「おすすめ」として最初からチェックしておく条件
 */
 const MEMO_ASKS = [
-  { id: "subsidy", label: "補助金の受付状況と締め切り（納車が間に合うか）", auto: (r) => r && r.E.sub > 0 },
+  { id: "subsidy", label: "補助金に間に合う納車の時期（12月までに登録できるか）", auto: (r) => r && r.E.sub > 0 },
   { id: "estimate", label: "見積もり・値引き・下取り", auto: (r) => r && r.diff >= 0 },
   { id: "charger", label: "自宅に充電器を付ける費用と工事", auto: () => S.homeCharge },
   { id: "apartment", label: "集合住宅での充電のしかた", auto: () => !S.homeCharge },
@@ -80,6 +80,19 @@ const MEMO_ASKS = [
   { id: "power", label: "停電のときの給電" },
   { id: "testdrive", label: "試乗・レンタカー", auto: () => !S.dUse },
 ];
+
+/* 補助金の行（国は登録の時期ごと、市町は受付の状況） */
+function memoSubText(r) {
+  const ED = EVS[S.evKey] || {}, per = subPeriod(), L = r.local.L;
+  const two = !SUBSIDY.closed && !afterCut() && subDec(ED) > 0 && subDec(ED) !== sub2027(ED);
+  const nat = r.E.sub > 0
+    ? `国 最大${man0(r.E.sub)}（${per === "dec" ? "12月までに登録" : "2027年1月以降に登録"}）${two ? `・${per === "dec" ? "1月以降の登録なら" : "12月までに登録なら"}最大${man0(per === "dec" ? sub2027(ED) : subDec(ED))}` : ""}`
+    : (SUBSIDY.closed ? "国の補助金は受付終了" : "国 ―");
+  const dl = SUBSIDY.closed ? "" : `。受付終了の見込み ${SUBSIDY.endText}・申請の最終締切 ${jpDate(SUBSIDY.finalDeadline)}`;
+  const loc = !L ? "" : `／${L.name} ${r.local.counted ? `最大${man0(r.local.counted)}` : L.status === "check" ? `${L.name.endsWith("町") ? "町" : "市"}のページで確認` : ((window.LOCAL_STATUS_LABEL || {})[L.status] || "")}`;
+  return nat + loc + dl;
+}
+const storeInfo = () => { const s = window.STORE || {}; return { name: s.name || "Honda Cars", tel: s.tel || "", hours: s.hours || "", reserveUrl: s.reserveUrl || "" }; };
 
 function memoInitAsks(r) {
   if (S.memoInit) return;
@@ -110,16 +123,17 @@ screens.memo = () => {
   const picked = MEMO_ASKS.filter((q) => S.memoAsks[q.id]);
   const L = r.local.L, st = subsidyStatus();
   const today = new Date(); const ds = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
-  const cross = r.dInit <= 0 && r.dAnnual >= 0 ? "買った時から" : (r.crossT !== null && r.crossT <= 30 ? `約${r.crossT.toFixed(1)}年目から` : "この条件では安くならない");
+  const cross = cheaperText(r);
   const total = r.diff < 0 ? `${r.N}年で EV が 約${man(-r.diff)} 安い` : `${r.N}年で ${rv} が 約${man(r.diff)} 安い`;
+  const ST = storeInfo();
   const row = (icon, k, v, sub, hot) => `<div class="rp-row${hot ? " hot" : ""}">${pic(icon, 28)}<span class="rp-k">${k}</span><span class="rp-v"><b class="num">${v}</b>${sub ? `<small>${sub}</small>` : ""}</span></div>`;
   return header("相談メモ", "cost", "相談メモ") + `<main class="main report" id="report" style="gap:16px">
     ${S.fromLink ? `<div class="info">共有されたリンクから開いています。数字は送られた条件で計算し直しています。</div>` : ""}
-    <div class="rp-head"><div><span class="rp-shop">Honda Cars</span><h1>EV購入 相談メモ</h1><span class="rp-date">${ds} 作成・EV Life Simulator</span></div>${pic("clipboard", 56)}</div>
+    <div class="rp-head"><div><span class="rp-shop">${esc(ST.name)}</span><h1>EV購入 相談メモ</h1><span class="rp-date">${ds} 作成・EV Life Simulator</span></div>${pic("clipboard", 56)}</div>
 
     <section class="memo-card rp">
       <h2><i>1</i>お客様の条件</h2>
-      <div class="rp-car">${carPic(r.E, 64)}<div><span>検討中のEV</span><b>${esc(r.E.name)}</b><small>比べる車：${esc(r.G.name)}（${rv}）</small></div></div>
+      <div class="rp-car">${carPic(r.E, 64)}<div><span>検討中のEV</span><b>${esc(r.E.name)}</b><small>比べる車：${esc(gLabel(r.G))}</small></div></div>
       <div class="rp-tiles">
         <div class="big"><span>1年に走る距離</span><b class="num">${km.toLocaleString("ja-JP")}<small>km</small></b></div>
         <div><span>お住まい</span><b>${L ? esc(L.name) : "―"}</b></div>
@@ -136,12 +150,12 @@ screens.memo = () => {
       <div class="rp-rows">
         ${row("plug", "ランニングコスト", dA >= 0 ? `年 約${man(dA)} 安い` : `年 約${man(-dA)} 高い`, `${rv} 年${man(r.gAnnual)} → EV 年${man(r.eAnnual)}`)}
         ${row("coin", "100円で走れる距離", `${r.k100g.toFixed(1)}km → ${r.k100a.toFixed(1)}km`, `${rv} → EV`)}
-        ${row("tag", "補助金", r.subTotal > 0 ? `最大 ${man0(r.subTotal)}` : SUBSIDY.closed ? "国の補助金は受付終了" : "対象外・未確認",
-          `国 ${r.E.sub > 0 ? `最大${man0(r.E.sub)}（${SUBSIDY.endText}まで・見込み）` : "―"}${L ? `／${esc(L.name)} ${r.local.counted ? `最大${man0(r.local.counted)}` : (LOCAL_STATUS_LABEL[L.status] || "")}` : ""}`)}
+        ${row("tag", "補助金", r.subTotal > 0 ? `最大 ${man0(r.subTotal)}` : SUBSIDY.closed ? "国の補助金は受付終了" : "対象外", esc(memoSubText(r)))}
         ${row("yen", "トータル", total, `${rv}より安くなるのは ${cross}`, true)}
       </div>
       ${ext.area || ext.trip || ext.ls ? `<ul class="memo-ext">${[ext.area, ext.trip, ext.ls].filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
-      <p class="hint" style="margin:0">価格・燃費・メンテ・保険の一部は仮の値・目安です。正式な金額は見積もりで確認してください。</p>
+      ${r.N < SUBSIDY_HOLD_YEARS && r.subTotal > 0 ? `<div class="st-warn"><b>${r.N}年で手放す場合の注意</b>補助金を受けた車を${SUBSIDY_HOLD_YEARS}年より前に手放すと、補助金の一部を返す必要がある場合があります。</div>` : ""}
+      <p class="hint" style="margin:0">価格・燃費・メンテ・保険は目安です。正式な金額は見積もりで確認してください。</p>
     </section>
 
     <section class="memo-card rp">
@@ -152,6 +166,13 @@ screens.memo = () => {
         <div class="lsopts">${asks}</div>
         <label class="f">ほかに聞きたいこと<textarea data-q="memoNote" rows="3" placeholder="例：妻の通勤にも使えるか">${esc(S.memoNote)}</textarea></label>
       </div>
+    </section>
+
+    <section class="memo-card rp rp-store">
+      <h2><i>4</i>相談するお店</h2>
+      <div class="rs-row"><b>${esc(ST.name)}</b>${ST.tel ? `<a href="tel:${esc(ST.tel.replace(/[^0-9+]/g, ""))}">電話 ${esc(ST.tel)}</a>` : ""}${ST.hours ? `<span>${esc(ST.hours)}</span>` : ""}</div>
+      ${ST.reserveUrl ? `<a class="btn noprint" href="${esc(ST.reserveUrl)}" target="_blank" rel="noopener">来店を予約する</a>` : ""}
+      <p class="hint" style="margin:0">ご来店のときに、この相談メモをスタッフにお見せください。${ST.reserveUrl ? "" : ST.tel ? "来店のご予約はお電話で受け付けています。" : ""}</p>
     </section>
 
     <section class="memo-card noprint savecard">
@@ -204,6 +225,8 @@ Object.assign(ACT, {
   driveOff() { S.dUse = false; render(true); },
   setKm(v) { S.annualKm = +v; S.kmMode = "direct"; render(true); },
   memoAsk(id) { S.memoAsks = { ...S.memoAsks, [id]: !S.memoAsks[id] }; render(true); },
+  subPer(v) { S.subPeriod = v === "dec" ? "dec" : "2027"; render(true); },
+  subToMemo() { const r = calc(); memoInitAsks(r); S.memoAsks = { ...S.memoAsks, subsidy: true }; go("memo"); },
   async memoCopy() {
     const u = shareUrl();
     try { await navigator.clipboard.writeText(u); memoMsg("リンクをコピーしました"); }
@@ -268,14 +291,14 @@ function drawMemoCanvas(r, imgs) {
 
   const rv = rivalShort(), km = Math.round(r.km), dA = r.gAnnual - r.eAnnual, L = r.local.L;
   const d = new Date(), ds = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
-  const cross = r.dInit <= 0 && r.dAnnual >= 0 ? "買った時から" : (r.crossT !== null && r.crossT <= 30 ? `約${r.crossT.toFixed(1)}年目から` : "この条件では安くならない");
+  const cross = cheaperText(r), ST = storeInfo();
   const picked = MEMO_ASKS.filter((q) => S.memoAsks[q.id]).map((q) => q.label);
   let y = P;
 
   x.fillStyle = C.bg; x.fillRect(0, 0, W, cv.height);
   // 見出し
   rr(P, y, CW, 210, 32, grad(y, 210));
-  text("Honda Cars", P + 40, y + 62, font(28, 700), "rgba(255,255,255,.88)");
+  text(ST.name, P + 40, y + 62, font(28, 700), "rgba(255,255,255,.88)");
   text("EV購入 相談メモ", P + 40, y + 134, font(60, 700), "#fff");
   text(`${ds} 作成・EV Life Simulator`, P + 40, y + 182, font(26), "rgba(255,255,255,.85)");
   img("clipboard", W - P - 150, y + 45, 120);
@@ -287,7 +310,7 @@ function drawMemoCanvas(r, imgs) {
     if (draw) { rr(ix, Y, iw, 160, 20, C.card2); img(r.E.pic || "car", ix + 22, Y + 25, 110);
       text("検討中のEV", ix + 158, Y + 46, font(24, 700), C.sub);
       text(r.E.name, ix + 158, Y + 100, font(46, 700), C.ink);
-      text(`比べる車：${r.G.name}（${rv}）`, ix + 158, Y + 140, font(26), C.sub); }
+      text(`比べる車：${gLabel(r.G)}`, ix + 158, Y + 140, font(26), C.sub); }
     h += 160 + 16;
     if (draw) { rr(ix, Y + h, iw, 130, 20, C.card2); text("1年に走る距離", ix + 24, Y + h + 44, font(24, 700), C.sub);
       text(km.toLocaleString("ja-JP"), ix + 24, Y + h + 110, font(64, 700), C.red);
@@ -308,11 +331,10 @@ function drawMemoCanvas(r, imgs) {
     const rows = [
       ["plug", "ランニングコスト", dA >= 0 ? `年 約${man(dA)} 安い` : `年 約${man(-dA)} 高い`, `${rv} 年${man(r.gAnnual)} → EV 年${man(r.eAnnual)}`],
       ["coin", "100円で走れる距離", `${r.k100g.toFixed(1)}km → ${r.k100a.toFixed(1)}km`, `${rv} → EV`],
-      ["tag", "補助金", r.subTotal > 0 ? `最大 ${man0(r.subTotal)}` : (SUBSIDY.closed ? "国の補助金は受付終了" : "対象外・未確認"),
-        `国 ${r.E.sub > 0 ? `最大${man0(r.E.sub)}（${SUBSIDY.endText}まで・見込み）` : "―"}${L ? `／${L.name} ${r.local.counted ? `最大${man0(r.local.counted)}` : ((window.LOCAL_STATUS_LABEL || {})[L.status] || "")}` : ""}`],
+      ["tag", "補助金", r.subTotal > 0 ? `最大 ${man0(r.subTotal)}` : (SUBSIDY.closed ? "国の補助金は受付終了" : "対象外"), memoSubText(r)],
     ];
     rows.forEach(([k, label, v, sub]) => { const lines = wrap(sub, iw - 110, font(22));
-      const rh = 108 + lines.length * 30;
+      const rh = 120 + lines.length * 30;
       if (draw) { img(k, ix, Y + h + 22, 64); text(label, ix + 90, Y + h + 40, font(24, 700), C.sub); text(v, ix + 90, Y + h + 92, font(42, 700), C.red);
         lines.forEach((l, i) => text(l, ix + 90, Y + h + 128 + i * 30, font(22), C.sub)); x.fillStyle = C.line; x.fillRect(ix, Y + h + rh - 2, iw, 2); }
       h += rh; });
@@ -340,8 +362,18 @@ function drawMemoCanvas(r, imgs) {
     return h;
   });
 
+  // 相談するお店
+  section(4, "相談するお店", (draw, Y) => {
+    const ix = P + 28; let h = 0;
+    if (draw) text(ST.name, ix, Y + 40, font(36, 700), C.ink);
+    h += 56;
+    [ST.tel ? `電話 ${ST.tel}` : "", ST.hours, ST.reserveUrl ? `来店予約 ${ST.reserveUrl}` : ""].filter(Boolean).forEach((t) => {
+      wrap(t, CW - 56, font(26)).forEach((l) => { if (draw) text(l, ix, Y + h + 30, font(26), C.sub); h += 38; }); });
+    return h + 12;
+  });
+
   // 注意書き
-  wrap("価格・燃費・メンテ・保険の一部は仮の値・目安です。正式な金額は見積もりで確認してください。補助金は予算に達すると受付が終わります。", CW, font(22)).forEach((l) => { text(l, P, y + 10, font(22), C.sub); y += 32; });
+  wrap(`価格・燃費・メンテ・保険は目安です。正式な金額は見積もりで確認してください。補助金は予算に達すると受付が終わります。${r.N < SUBSIDY_HOLD_YEARS && r.subTotal > 0 ? `補助金を受けた車を${SUBSIDY_HOLD_YEARS}年より前に手放すと、一部を返す必要がある場合があります。` : ""}`, CW, font(22)).forEach((l) => { text(l, P, y + 10, font(22), C.sub); y += 32; });
   y += P - 10;
 
   const out = document.createElement("canvas"); out.width = W; out.height = Math.ceil(y);
