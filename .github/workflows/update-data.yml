@@ -14,7 +14,7 @@ on:
       target:
         description: "更新するもの"
         type: choice
-        options: [all, subsidy, chargers]
+        options: [all, subsidy, chargers, facilities]
         default: all
 
 permissions:
@@ -42,21 +42,25 @@ jobs:
 
       - name: 補助金を確かめる
         id: sub
-        if: (github.event_name == 'schedule' && github.event.schedule == '0 21 * * *') || (github.event_name == 'workflow_dispatch' && inputs.target != 'chargers')
+        if: (github.event_name == 'schedule' && github.event.schedule == '0 21 * * *') || (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'subsidy'))
         run: python update_subsidy.py
 
       - name: 充電施設を取り直す
         id: chg
-        if: (github.event_name == 'schedule' && github.event.schedule == '30 21 * * 1') || (github.event_name == 'workflow_dispatch' && inputs.target != 'subsidy')
+        if: (github.event_name == 'schedule' && github.event.schedule == '30 21 * * 1') || (github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'chargers'))
         continue-on-error: true
         run: python update_chargers.py
+
+      - name: 公式の一覧の施設の位置を、住所から取り直す（手で実行したときだけ）
+        if: github.event_name == 'workflow_dispatch' && inputs.target == 'facilities'
+        run: python build_facilities.py --geocode
 
       - name: 変わったファイルをコミット
         id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add subsidy.js chargers.js chargers.csv
+          git add subsidy.js chargers.js chargers.csv facilities_official.csv facilities_official.js
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
