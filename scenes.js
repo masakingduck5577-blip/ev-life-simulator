@@ -127,7 +127,7 @@ window.SCENE_CARDS = [
     tags: ["commute", "pickup", "shopping"],
     requires: { homeCharge: true },
     metric: { type: "commute" },
-    cta: { to: "area", label: "生活圏マップで毎日の移動を確かめる" },
+    cta: { to: "area", label: "充電する場所を地図で見る" },
     draft: true,
   },
   {
@@ -142,7 +142,7 @@ window.SCENE_CARDS = [
       default: "車種によって給電に必要な機器が異なります。販売店で確認してください。",
     },
     note: "使った分だけ航続距離が減ります。帰り道の分は残しておきましょう。",
-    cta: { to: "trip", label: "旅行モードでキャンプ場まで試算する" },
+    cta: { to: "trip", label: "充電する場所を地図で見る" },
     draft: true,
   },
   {
@@ -163,7 +163,7 @@ window.SCENE_CARDS = [
     tags: ["longtrip", "outdoor"],
     metric: { type: "text", label: "急速充電の目安", value: "約30分で80%まで" },
     note: "充電にかかる時間は、充電器の出力と車の電池の状態で変わります。",
-    cta: { to: "trip", label: "旅行モードで行き先までの充電を見る" },
+    cta: { to: "trip", label: "充電する場所を地図で見る" },
     draft: true,
   },
 ];

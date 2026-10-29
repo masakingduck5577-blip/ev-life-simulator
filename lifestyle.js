@@ -103,16 +103,16 @@ function lsMetric(card) {
         sub: `冬は約${Math.floor(rangeWin / t.rtKm)}日分（往復${t.rtKm.toFixed(1)}km・生活圏マップから）` };
     }
     return { label: "1回の充電で走れる距離", value: `約${Math.round(range)}km`,
-      sub: `冬は約${Math.round(rangeWin)}km。生活圏に職場を登録すると、通勤何日分かを表示します` };
+      sub: `冬は約${Math.round(rangeWin)}km` };
   }
   if (m.type === "text") return { label: m.label || "", value: m.value || "", sub: "" };
   return null;
 }
 
 const lsCtaTarget = (to) => ({
-  rental: "rental", trip: "trip",
+  rental: "rental", trip: "map",
   cost: "cost",
-  area: S.home ? "areamap" : "area",
+  area: "map",
 }[to] || "home");
 
 /* ---------- 操作 ---------- */

@@ -276,7 +276,7 @@ async function saveMemoImage() {
 
 function drawMemoCanvas(r, imgs) {
   const W = 1080, P = 48, CW = W - P * 2, F = '"Noto Sans JP","Hiragino Sans","Yu Gothic",Meiryo,sans-serif';
-  const C = { bg: "#141518", card: "#1E1F23", card2: "#27282D", line: "#34363C", ink: "#F4F4F5", sub: "#A3A6AD", red: "#FF4A4F", red1: "#A81E24", red2: "#E0352F" };
+  const C = { bg: "#F2F5F9", card: "#FFFFFF", card2: "#F2F5FA", line: "#DFE3E8", ink: "#0F1726", sub: "#5B6370", red: "#1F6FEB", red1: "#0A2540", red2: "#123A66" };
   const cv = document.createElement("canvas"); cv.width = W; cv.height = 4200;
   const x = cv.getContext("2d"); x.textBaseline = "alphabetic";
   const font = (px, w = 400) => `${w} ${px}px ${F}`;
