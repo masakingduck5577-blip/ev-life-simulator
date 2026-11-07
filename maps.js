@@ -19,10 +19,13 @@ const SEASONS = {
   win: { label: "冬", f: () => n("cWin") || 1 },
 };
 const FTYPE = { quick: "急速充電", normal: "普通充電", merit: "EVで得する" };
-const PIN_SIZE = { home: 28, work: 28, place: 26, quick: 22, normal: 20, merit: 16, stop: 32, honda: 24 };
+const PIN_SIZE = { home: 28, work: 28, place: 26, quick: 28, normal: 26, merit: 16, stop: 32, honda: 28 };
 const isHC = (f) => f.network === "Honda Charge";
 const pinKind = (f) => isHC(f) ? "honda" : f.type;
-const pinText = (f) => isHC(f) ? "H" : f.type === "quick" ? "急" : f.type === "normal" ? "普" : "";
+/* 充電スポットの印：普通充電＝電池の線アイコン、急速充電＝電池＋稲妻（太い線）、Honda Charge＝赤いH */
+const chgSvg = (k, w) => `<svg viewBox="0 0 24 24" width="${w}" height="${w}" fill="none" stroke="currentColor" stroke-width="${k === "quick" ? 2.6 : 2}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k === "quick" ? "batteryQuick" : "battery"]}</svg>`;
+const CHG_MARK = { normal: chgSvg("normal", 16), quick: chgSvg("quick", 18), honda: "H" };
+const pinText = (f) => CHG_MARK[pinKind(f)] || "";
 const showLayer = (f) => S.layers[f.type] && (!isHC(f) || S.layers.honda);
 
 const FAC = () => window.FACILITIES || [];
@@ -270,7 +273,7 @@ function onTripInput(el) {
    画面：モード選択
    ========================================================= */
 screens.map = () => {
-  const legend = [["honda", "H", "Honda Charge"], ["quick", "急", "急速充電"], ["normal", "普", "普通充電"]].map(([k, t, l]) => `<span><span class="pin ${k}" aria-hidden="true">${t}</span>${l}</span>`).join("");
+  const legend = [["honda", CHG_MARK.honda, "Honda Charge"], ["quick", CHG_MARK.quick, "急速充電"], ["normal", CHG_MARK.normal, "普通充電"]].map(([k, t, l]) => `<span><span class="pin ${k}" aria-hidden="true">${t}</span>${l}</span>`).join("");
   return header("充電する場所", "cost", "マップ") + `<main class="main">
     <section class="sec">
       <h2>${pic("map", 28)} 街の充電スポット</h2>
@@ -461,7 +464,7 @@ screens.areamap = () => {
     return header("生活圏マップ", "area", "結果 C-1") + `<main class="main"><p class="info">先に自宅と、職場かよく行く場所を登録してください。</p></main>` + footer(btn("area", "場所を登録する"));
   }
   const A = S.area;
-  const chips = ["honda", "quick", "normal", "merit"].map((k) => `<button type="button" class="chip k-${k}" aria-pressed="${S.layers[k]}" data-act="layer:${k}">${{ honda: "H Honda Charge", quick: "■ 急速充電", normal: "● 普通充電", merit: "◆ EVメリット" }[k]}</button>`).join("");
+  const chips = ["honda", "quick", "normal", "merit"].map((k) => `<button type="button" class="chip k-${k}" aria-pressed="${S.layers[k]}" data-act="layer:${k}">${{ honda: "Honda Charge", quick: "急速充電", normal: "普通充電", merit: "◆ EVメリット" }[k]}</button>`).join("");
   let body = "";
   if (!A || A.status === "loading") body = loadingBox("経路と施設を調べています…");
   else if (A.status === "error") body = `<p class="warnbox"><strong>計算できませんでした：</strong>${esc(A.msg)}</p>`;
@@ -544,7 +547,7 @@ screens.facility = () => {
   const item = (k, v) => (v || v === 0) ? `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>` : "";
   return backHeader(esc(f.name), FTYPE[f.type]) + `<main class="main facsheet">
     <div class="mapbox sm" id="map-fac"></div>
-    <div class="badges" style="font-size:12px">${isHC(f) ? '<span class="bdg" style="background:#1F6FEB;color:#fff">Honda Charge</span>' : f.network ? `<span class="bdg mute" style="background:var(--bg)">${esc(f.network)}</span>` : ""}<span class="bdg ok" style="background:${f.type === "quick" ? "#24323D" : f.type === "normal" ? "#5B6A76" : "#2E6B45"};color:#fff">${FTYPE[f.type]}</span>${f.highway ? '<span class="bdg ng">高速道路のSA/PA</span>' : ""}${f.demo ? '<span class="flag">デモ</span>' : ""}</div>
+    <div class="badges" style="font-size:12px">${isHC(f) ? '<span class="bdg" style="background:#CC0000;color:#fff">Honda Charge</span>' : f.network ? `<span class="bdg mute" style="background:var(--bg)">${esc(f.network)}</span>` : ""}<span class="bdg ok" style="background:${f.type === "quick" ? "#24323D" : f.type === "normal" ? "#5B6A76" : "#2E6B45"};color:#fff">${FTYPE[f.type]}</span>${f.highway ? '<span class="bdg ng">高速道路のSA/PA</span>' : ""}${f.demo ? '<span class="flag">デモ</span>' : ""}</div>
     ${isHC(f) ? '<div class="info">Honda Charge は、専用アプリで充電・支払いをします。N-ONE e: などは差すだけで充電が始まります（プラグ＆チャージ）。料金・空き状況はアプリで確認してください。</div>' : ""}
     <dl>${item("住所", f.address)}${item("出力", f.kw ? `${f.kw}kW` : "")}${item("口数", f.ports ? `${f.ports}口` : "")}${item("料金", f.priceText || (f.price != null ? `${f.price}円/kWh換算` : ""))}${item("利用できる時間", f.hours)}</dl>
     ${f.merit ? `<div class="info" style="background:var(--ok-t);color:var(--ink)"><div style="font-size:12px;font-weight:700;color:var(--ok)">EVで得すること</div>${esc(f.merit)}</div>` : ""}

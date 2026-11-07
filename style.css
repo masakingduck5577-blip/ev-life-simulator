@@ -869,3 +869,15 @@ body{background:var(--bg)}
 .sc-chips .ico{color:#fff}
 .plugbadge .ico{color:var(--ev)}
 .freqcard .fc-k .ico{color:var(--ev) !important}
+
+/* 充電スポットの印（普通＝電池、急速＝電池＋稲妻の太線、Honda Charge＝赤いH） */
+.pin.normal{background:#fff;color:#3E5368;border:2px solid #3E5368;border-radius:50%;width:26px;height:26px}
+.pin.quick{background:#0A2540;color:#fff;border:2px solid #fff;border-radius:50%;width:28px;height:28px}
+.pin.honda{background:#CC0000;color:#fff;border:2px solid #fff;border-radius:50%;width:28px;height:28px;font-size:15px;font-weight:900;font-family:Arial,"Helvetica Neue",sans-serif;letter-spacing:0}
+.pin svg{display:block}
+.maplegend .pin{width:24px;height:24px}
+.maplegend .pin.honda{font-size:13px}
+.maplegend .pin svg{width:15px;height:15px}
+.chip.k-honda[aria-pressed="true"]{background:#CC0000;border-color:#CC0000;color:#fff}
+.chip.k-quick[aria-pressed="true"]{background:#0A2540;border-color:#0A2540;color:#fff}
+.chip.k-normal[aria-pressed="true"]{background:#3E5368;border-color:#3E5368;color:#fff}
