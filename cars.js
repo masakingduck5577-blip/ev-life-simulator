@@ -5,24 +5,25 @@
    acKw: 普通充電で受け入れられる最大出力（kW）※仮置き・要確認
    ========================================================= */
 const EVS = {
-  "n-one-e":  {kei:true, rival:"n-one", pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", range:295, name:"N-ONE e:（e:G）", cat:"軽乗用EV", price:2699400, sub:580000, sub2027:458000, wh:105, kwh:29.6, tax:10800, wt:0, qkw:50, acKw:6, ok:true},
-  "super-one":{rival:"fit-gas", pic:"car", seats:"4人", size:"小型", use:"走りを楽しむ", range:274, name:"Super-ONE", cat:"小型EV", price:3390200, sub:1300000, sub2027:780000, wh:113, kwh:29.6, tax:25000, wt:0, qkw:50, acKw:6, ok:false},
-  "insight":  {rival:"zrv-gas", pic:"suv", seats:"5人", size:"SUV", use:"家族で遠出", range:535, name:"INSIGHT", cat:"クロスオーバーSUV EV", price:5500000, sub:1300000, sub2027:780000, wh:134, kwh:68.8, tax:25000, wt:0, qkw:150, acKw:6, ok:true},
-  "n-van-e":  {kei:true, rival:"n-van", pic:"van", seats:"1〜4人（グレードによる）", size:"軽バン", use:"仕事・趣味の荷物", range:245, name:"N-VAN e:", cat:"軽商用EV", price:2600000, sub:580000, sub2027:458000, wh:126, kwh:29.6, tax:5000, wt:0, qkw:50, acKw:6, ok:false},
+  "n-one-e":  {photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2025/09/4250911-n-one-e/4250911-n-one-e_01.jpg", kei:true, rival:"n-one", pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", range:295, name:"N-ONE e:（e:G）", cat:"軽乗用EV", price:2699400, sub:580000, sub2027:458000, wh:105, kwh:29.6, tax:10800, wt:0, qkw:50, acKw:6, ok:true},
+  "super-one":{photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2026/05/4260521-super-one/4260521-super-one_01.jpg", rival:"fit-gas", pic:"car", seats:"4人", size:"小型", use:"走りを楽しむ", range:274, name:"Super-ONE", cat:"小型EV", price:3390200, sub:1300000, sub2027:780000, wh:113, kwh:29.6, tax:25000, wt:0, qkw:50, acKw:6, ok:false},
+  "insight":  {photo:"https://global.honda/content/dam/site/global-en/newsroom-new/cq_img/news/2026/04/4260416eng-insight/4260416eng-insight_01.jpg", rival:"zrv-gas", pic:"suv", seats:"5人", size:"SUV", use:"家族で遠出", range:535, name:"INSIGHT", cat:"クロスオーバーSUV EV", price:5500000, sub:1300000, sub2027:780000, wh:134, kwh:68.8, tax:25000, wt:0, qkw:150, acKw:6, ok:true},
+  "n-van-e":  {photo:"https://global.honda/content/dam/site/global-en/newsroom-new/cq_img/news/2024/06/4240613eng-n-van-e/4240613eng-n-van-e_01.jpg", kei:true, rival:"n-van", pic:"van", seats:"1〜4人（グレードによる）", size:"軽バン", use:"仕事・趣味の荷物", range:245, name:"N-VAN e:", cat:"軽商用EV", price:2600000, sub:580000, sub2027:458000, wh:126, kwh:29.6, tax:5000, wt:0, qkw:50, acKw:6, ok:false},
   "custom":   {name:"その他のEV", cat:"スペックを入力", custom:true}
 };
 /* rival：比べる「同じクラスのガソリン車」（GASES の名前）。画面では車を選ばせず、ここで自動で決める
    seats・size・use：車を選ぶ画面に出す「使い方の印象」。range：一充電走行距離（WLTC、メーカー発表のカタログ値）
-   pic：画面に出すイラスト（images.js の名前）。写真を使うときは photo:"ファイル名" を足す
+   pic：写真が読み込めないときに出す線アイコン（icons.js の名前）
+   photo：車の写真（Honda公式ニュースルームの画像）。自分で保存した画像に替えるときは "img/n-one-e.jpg" のように書く
    比べる相手の車。type は "gas"（ガソリン車）/ "hv"（ハイブリッド車）。価格・燃費は同じクラスの目安 */
 const GASES = {
-  "n-one": {pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", name:"N-ONE", cat:"軽乗用", type:"gas", price:1800000, fe:23, tax:10800, wt:3300},
-  "n-box": {pic:"car", seats:"4人", size:"軽（背が高い）", use:"室内が広い・子育て", name:"N-BOX", cat:"軽乗用", type:"gas", price:1800000, fe:21, tax:10800, wt:3300},
-  "n-van": {pic:"van", seats:"1〜4人（グレードによる）", size:"軽バン", use:"仕事・趣味の荷物", name:"N-VAN", cat:"軽商用", type:"gas", price:1500000, fe:18, tax:5000, wt:3300},
-  "fit-gas":{pic:"car", seats:"5人", size:"コンパクト", use:"街乗りから遠出まで", name:"フィット（ガソリン）", cat:"コンパクト", type:"gas", price:1720000, fe:20, tax:30500, wt:7500},
-  "zrv-gas":{pic:"suv", seats:"5人", size:"SUV", use:"家族で遠出", name:"ZR-V（ガソリン）", cat:"SUV", type:"gas", price:3000000, fe:14, tax:30500, wt:12300},
-  "fit":   {pic:"car", seats:"5人", size:"コンパクト", use:"街乗りから遠出まで", name:"フィット e:HEV", cat:"コンパクト", type:"hv", price:2300000, fe:27, tax:30500, wt:7500},
-  "zrv":   {pic:"suv", seats:"5人", size:"SUV", use:"家族で遠出", name:"ZR-V e:HEV", cat:"SUV", type:"hv", price:3600000, fe:22, tax:36000, wt:12300},
+  "n-one": {photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2020/11/4201119-n-one_01.jpg", pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", name:"N-ONE", cat:"軽乗用", type:"gas", price:1800000, fe:23, tax:10800, wt:3300},
+  "n-box": {photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2023-new/10/4231005-n-box_og.jpg", pic:"car", seats:"4人", size:"軽（背が高い）", use:"室内が広い・子育て", name:"N-BOX", cat:"軽乗用", type:"gas", price:1800000, fe:21, tax:10800, wt:3300},
+  "n-van": {photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2026/03/4260319-n-van/4260319-n-van_01.jpg", pic:"van", seats:"1〜4人（グレードによる）", size:"軽バン", use:"仕事・趣味の荷物", name:"N-VAN", cat:"軽商用", type:"gas", price:1500000, fe:18, tax:5000, wt:3300},
+  "fit-gas":{photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2026/07/4260709-fit/4260709-fit_01.jpg", pic:"car", seats:"5人", size:"コンパクト", use:"街乗りから遠出まで", name:"フィット（ガソリン）", cat:"コンパクト", type:"gas", price:1720000, fe:20, tax:30500, wt:7500},
+  "zrv-gas":{photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2022-new/11/4221117-zr-v_01.jpg", pic:"suv", seats:"5人", size:"SUV", use:"家族で遠出", name:"ZR-V（ガソリン）", cat:"SUV", type:"gas", price:3000000, fe:14, tax:30500, wt:12300},
+  "fit":   {photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2026/07/4260709-fit/4260709-fit_01.jpg", pic:"car", seats:"5人", size:"コンパクト", use:"街乗りから遠出まで", name:"フィット e:HEV", cat:"コンパクト", type:"hv", price:2300000, fe:27, tax:30500, wt:7500},
+  "zrv":   {photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2022-new/11/4221117-zr-v_01.jpg", pic:"suv", seats:"5人", size:"SUV", use:"家族で遠出", name:"ZR-V e:HEV", cat:"SUV", type:"hv", price:3600000, fe:22, tax:36000, wt:12300},
   "custom":{name:"その他の車", cat:"スペックを入力", custom:true}
 };
 const RIVAL_LABEL = {gas:"ガソリン車", hv:"ハイブリッド車"};
