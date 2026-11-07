@@ -26,7 +26,7 @@ const LS_ICONS = {
 };
 const LS_PIC = { ac: "snow", fuel: "fuel", power: "flashlight", quiet: "sleep", battery: "battery", tent: "camp", road: "road", wheel: "dash", leaf: "seedling", paw: "dog", yen: "yen" };
 const TAG_PIC = { pickup: "school", commute: "office", shopping: "shop", wait: "hourglass", outdoor: "camp", longtrip: "road", pet: "dog", fuel: "fuel", smell: "fuel", quiet: "shh", disaster: "storm", fun: "dash", eco: "seedling" };
-const lsIcon = (k, big) => (window.IMG && IMG[LS_PIC[k]]) ? pic(LS_PIC[k], big ? 64 : 36) : lsIconSvg(k);
+const lsIcon = (k, big) => (window.ICONS && ICONS[LS_PIC[k]]) ? pic(LS_PIC[k], big ? 56 : 32) : lsIconSvg(k);
 const lsIconSvg = (k) => `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${LS_ICONS[k] || LS_ICONS.battery}</svg>`;
 
 /* ---------- 場面の自動選択（マップに登録した場所から） ---------- */

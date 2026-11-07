@@ -856,3 +856,14 @@ body{background:var(--bg)}
 .pin.honda{background:#1F6FEB}
 .pin.quick{background:#0A2540}
 .pin.normal{background:#6B7A8C}
+
+/* ---- 線アイコン（2026-11-05：イラストから変更） ---- */
+.ico{display:inline-block;flex-shrink:0;vertical-align:middle;color:var(--ev)}
+.sumtop .ico,.startcard .ico,.rp-head .ico,.rp-row.hot .ico,.btn .ico{color:#fff !important}
+.rentbtn .ico{color:var(--navy) !important}
+.st-grid .ico,.rcd .ico,.br .lb .ico{color:inherit}
+.road.g .rd-car .ico{filter:none;color:var(--gas)}
+.road.g .rd-l .ico{color:var(--gas)}
+.sc-chips .ico{color:#fff}
+.plugbadge .ico{color:var(--ev)}
+.freqcard .fc-k .ico{color:var(--ev) !important}

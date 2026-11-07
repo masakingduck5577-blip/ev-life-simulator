@@ -258,7 +258,7 @@ async function saveMemoImage() {
     if (document.fonts && document.fonts.ready) await document.fonts.ready;
     const keys = ["clipboard", r.E.pic || "car", "plug", "coin", "tag", "yen"];
     const imgs = {};
-    await Promise.all(keys.map((k) => new Promise((res) => { const im = new Image(); im.onload = () => { imgs[k] = im; res(); }; im.onerror = res; im.src = (window.IMG || {})[k] || ""; if (!im.src) res(); })));
+    await Promise.all(keys.map((k) => new Promise((res) => { const im = new Image(); im.onload = () => { imgs[k] = im; res(); }; im.onerror = res; im.src = window.iconURI ? iconURI(k, (k === "clipboard" || k === "yen") ? "#FFFFFF" : "#1F6FEB") : ""; if (!im.src) res(); })));
     const canvas = drawMemoCanvas(r, imgs);
     const blob = await new Promise((res) => canvas.toBlob(res, "image/png"));
     const d = new Date(), name = `相談メモ_${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}.png`;
