@@ -41,7 +41,7 @@ const SUBSIDY_HOLD_YEARS = 4;   // 処分制限期間（自家用）。これよ
    {car} は選んだEVの名前（例 n-one-e）に置き換わる。例："https://example.com/reserve?car={car}"
    ========================================================= */
 const RENTAL = {
-  url: "",
+  url: "https://ev-rent-a-car-nine.vercel.app",   // チームのEVレンタカーアプリ
   newTab: true,
   shop: "Honda Cars",
   note: "借りた店舗で返却・充電代込みの料金プランを予定",

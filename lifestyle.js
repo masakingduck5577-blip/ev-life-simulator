@@ -177,7 +177,7 @@ screens.effect = () => {
   const selLabels = TAGS().filter((t) => S.ls.sel[t.id]).map((t) => `<span class="bdg mute" style="background:var(--bg)">${esc(t.label)}</span>`).join("");
   return header("あなたのEVライフ", "lifestyle", "結果 A") + `<main class="main" style="gap:16px">
     <div class="sec"><h1 style="font-size:21px">あなたに合うEVの使い方を<br>${top.length}つ見つけました</h1>
-      <div class="badges" style="align-items:center;font-size:12px">${selLabels}<button class="lk" data-go="lifestyle" style="margin-left:0">選び直す</button></div></div>
+      <div class="badges" style="align-items:center;font-size:14px">${selLabels}<button class="lk" data-go="lifestyle" style="margin-left:0">選び直す</button></div></div>
     ${top.map((c, i) => lsCardHtml(c, i === 0)).join("")}
     ${rest.length ? `<details><summary>ほかの使い方（${rest.length}）</summary><div class="body">${rest.map((c) => `<button type="button" class="lk" style="margin:0;justify-content:flex-start" data-act="lsOpen:${esc(c.id)}">${esc(c.title)}</button>`).join("")}</div></details>` : ""}
     <p class="hint">数字は、コスト比較の電費・電気代の設定で計算した目安です。試算のEV：${esc(carForMap().name)}${carForMap().isDefault ? "（未選択のため仮）" : ""}</p>
@@ -200,13 +200,13 @@ screens.lscard = () => {
     const keys = Object.keys(EVS).filter((k) => !EVS[k].custom);
     const cur = S.ls.carView || (keys.includes(S.evKey) ? S.evKey : keys[0]);
     cars = `<section class="sec"><h2>車種ごとに必要なもの</h2>
-      <div class="chips">${keys.map((k) => `<button type="button" class="chip" aria-pressed="${k === cur}" data-act="lsCar:${k}" style="min-height:40px;font-size:13px">${esc(EVS[k].name)}</button>`).join("")}</div>
+      <div class="chips">${keys.map((k) => `<button type="button" class="chip" aria-pressed="${k === cur}" data-act="lsCar:${k}" style="min-height:40px;font-size:14px">${esc(EVS[k].name)}</button>`).join("")}</div>
       <p class="warnbox" style="margin:0">${esc(c.carNotes[cur] || c.carNotes.default || "")}</p></section>`;
   }
   const prev = i > 0 ? list[i - 1] : null, next = i >= 0 && i < list.length - 1 ? list[i + 1] : null;
   return header("提案カード", back, i >= 0 ? `${i + 1} / ${list.length}` : "") + `<main class="main">
     ${c.image ? `<img src="${esc(c.image)}" alt="" style="width:100%;height:180px;object-fit:cover;border-radius:14px">` : `<div class="lsic big">${lsIcon(c.icon, true)}</div>`}
-    <div class="sec">${reasons ? `<div class="badges" style="font-size:12px">${reasons}</div>` : ""}
+    <div class="sec">${reasons ? `<div class="badges" style="font-size:14px">${reasons}</div>` : ""}
       <h1 style="font-size:22px">${esc(c.title)}</h1>
       <p style="margin:0;font-size:14px;line-height:1.8">${esc(c.detail || c.body)}</p></div>
     ${m && m.value ? `<section class="sec"><h2>数字で見ると</h2><div class="lsstat"><span>${esc(m.label)}</span><b class="num">${esc(m.value)}</b>${m.sub ? `<small>${esc(m.sub)}</small>` : ""}</div></section>` : ""}

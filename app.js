@@ -260,7 +260,7 @@ screens.cost.update = () => {
   const share = S.homeCharge ? Math.round(n("homeShare")) : 0;
   const km = Math.round(r.km);
   const rv = rivalShort();
-  const drTxt = r.drive ? `<br><span style="color:var(--ev);font-weight:700">電費：今日の走り（${r.drive.kmPerKwh.toFixed(1)}km/kWh）</span> <button class="lk" data-act="driveOff" style="min-height:32px;margin:0;padding:0 6px;font-size:12px">カタログ値に戻す</button>` : "";
+  const drTxt = r.drive ? `<br><span style="color:var(--ev);font-weight:700">電費：今日の走り（${r.drive.kmPerKwh.toFixed(1)}km/kWh）</span> <button class="lk" data-act="driveOff" style="min-height:32px;margin:0;padding:0 6px;font-size:14px">カタログ値に戻す</button>` : "";
   document.getElementById("cond").innerHTML = `<div><b>${r.E.name} と ${gLabel(r.G)}</b><br>年${km.toLocaleString("ja-JP")}km・${r.N}年・${S.homeCharge?`自宅充電${share}%`:"自宅充電なし"}${drTxt}</div><button class="lk" data-go="gas" style="margin:0;white-space:nowrap">条件を変える</button>`;
   document.getElementById("lgG").textContent = gLabel(r.G);
   document.getElementById("thG").textContent = rv;
@@ -385,7 +385,7 @@ screens.total = () => {
   const r = doneB() ? calc() : null;
   const tileB = r ? `<div class="tile"><div class="h">${pic("coin",32)}<span class="ht">コスト</span></div>
       <div class="big num" style="color:${r.diff<0?"var(--ev)":"var(--gas)"}">${r.diff<0?`${r.N}年で EVが ${man(-r.diff)} 安い`:`${r.N}年で ${rivalShort()}が ${man(r.diff)} 安い`}</div>
-      <div class="badges" style="font-size:12px">${r.E.sub>0?`<span class="bdg ok">補助金 −${Math.round(r.E.sub/10000)}万円</span>`:""}${r.gAnnual>r.eAnnual?`<span class="bdg ok">維持費 年約${man(r.gAnnual-r.eAnnual)}安い</span>`:""}</div>
+      <div class="badges" style="font-size:14px">${r.E.sub>0?`<span class="bdg ok">補助金 −${Math.round(r.E.sub/10000)}万円</span>`:""}${r.gAnnual>r.eAnnual?`<span class="bdg ok">維持費 年約${man(r.gAnnual-r.eAnnual)}安い</span>`:""}</div>
       <div class="s">${gLabel(r.G)}との比較・逆転：${r.cross}</div>
       <div class="links"><button class="lk" data-go="cost">詳しく見る</button><button class="lk" data-go="gas">条件を変える</button></div></div>`
     : `<div class="tile"><div class="h">${pic("coin",32)}<span class="ht">コスト</span></div><div class="big">まだ入力されていません</div><div class="links"><button class="lk" data-go="gas">車両を選んで比較する</button></div></div>`;
@@ -404,8 +404,8 @@ const stub = (title,back,tag,heading,items,next) => () => header(title,back,tag)
 </main>` + footer(...next);
 screens.rental = () => { const E=evCar(); return header("EVレンタカー","cost","予約") + `<main class="main">
   <div class="hero"><h1>数字の次は、<br>乗り心地を確かめる</h1><p>静かさや加速は、乗ってみるのが一番です。</p></div>
-  <div class="stub"><span class="pill soon" style="align-self:flex-start">レンタカーアプリと連携予定</span><h2>${E?E.name:"選んだEV"} を予約</h2><ul><li>${RENTAL.shop}で借りて、同じ店舗に返す</li><li>${RENTAL.note}</li><li>選んだ車種を引き継いで予約画面を開く（予約画面は準備中）</li></ul></div>
-</main>` + footer(btn2("cost","シミュレーション結果に戻る")); };
+  <div class="stub"><h2>${E?E.name:"選んだEV"} を予約</h2><ul><li>${RENTAL.shop}で借りて、同じ店舗に返す</li><li>${RENTAL.note}</li><li>予約はEVレンタカーアプリで行います（新しいタブで開きます）</li></ul></div>
+</main>` + footer(`<button class="btn" data-act="rentalGo">レンタカーアプリを開く</button>`, btn2("cost","シミュレーション結果に戻る")); };
 screens.share = () => header("結果を共有","memo","共有") + `<main class="main"><div class="stub"><span class="pill soon" style="align-self:flex-start">準備中</span><h2>家族に見せる1枚サマリー</h2><ul><li>節約額・行ける範囲・おすすめ車種を1枚に</li><li>リンクを送ると同じ結果を開ける</li></ul></div></main>` + footer(btn2("total","診断結果に戻る"));
 
 /* =========================================================
@@ -464,6 +464,7 @@ function render(keepScroll){
 }
 function go(to){
   if(to==="rental-go"){ return; }
+  if(to==="rental" && RENTAL.url){ ACT.rentalGo(); return; }   // レンタカーはチームのアプリを新しいタブで開く
   if(("#/"+to)===location.hash) render(false); else location.hash = "/"+to;
 }
 window.addEventListener("hashchange", () => render(false));
