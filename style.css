@@ -669,7 +669,7 @@ table{color:var(--ink)}
 .sbadge{font-size:14px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
 .sbadge.open{background:var(--ok-t);color:var(--ok)}
 .sbadge.soon{background:var(--warn-t);color:var(--warn)}
-.sbadge.closed,.sbadge.none{background:#33353B;color:var(--sub)}
+.sbadge.closed,.sbadge.none{background:#E6E9EE;color:#4A5563}
 .sbadge.check{background:var(--warn-t);color:var(--warn)}
 
 /* ===== 詳細の開閉（矢印と、カーソルを合わせたら赤い縁） ===== */
@@ -886,3 +886,9 @@ body{background:var(--bg)}
 body{font-size:16px}
 a,.lk{display:inline-flex;align-items:center;min-height:24px;padding-block:2px}
 :focus-visible{outline:3px solid #000 !important;outline-offset:2px !important;box-shadow:0 0 0 6px #FFD43D !important}
+
+/* 市町を選んでいないときは、プルダウンを目立たせる */
+.cityrow select.empty{border:2px solid var(--accent,#1F6FEB);background:#EEF4FF;font-weight:700}
+/* お住まいの市町：ラベルの下に、横いっぱいのプルダウン（「那須塩原市（15万円・受付中）」が切れないように） */
+.cityrow{flex-direction:column;align-items:stretch;gap:8px}
+.cityrow select{width:100%;min-width:0;height:48px;border-radius:12px;background:#fff;border:1.5px solid var(--line)}

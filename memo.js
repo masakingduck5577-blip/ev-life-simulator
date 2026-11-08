@@ -89,7 +89,7 @@ function memoSubText(r) {
     ? `国 最大${man0(r.E.sub)}（${per === "dec" ? "12月までに登録" : "2027年1月以降に登録"}）${two ? `・${per === "dec" ? "1月以降の登録なら" : "12月までに登録なら"}最大${man0(per === "dec" ? sub2027(ED) : subDec(ED))}` : ""}`
     : (SUBSIDY.closed ? "国の補助金は受付終了" : "国 ―");
   const dl = SUBSIDY.closed ? "" : `。受付終了の見込み ${SUBSIDY.endText}・申請の最終締切 ${jpDate(SUBSIDY.finalDeadline)}`;
-  const loc = !L ? "" : `／${L.name} ${r.local.counted ? `最大${man0(r.local.counted)}` : L.status === "check" ? `${L.name.endsWith("町") ? "町" : "市"}のページで確認` : ((window.LOCAL_STATUS_LABEL || {})[L.status] || "")}`;
+  const loc = !L ? "" : `／${L.name} ${r.local.counted ? `最大${man0(r.local.counted)}` : L.status === "check" ? `金額は${L.name.endsWith("町") ? "町" : "市"}のページで確認` : ((window.LOCAL_STATUS_LABEL || {})[L.status] || "")}`;
   return nat + loc + dl;
 }
 const storeInfo = () => { const s = window.STORE || {}; return { name: s.name || "Honda Cars", tel: s.tel || "", hours: s.hours || "", reserveUrl: s.reserveUrl || "" }; };

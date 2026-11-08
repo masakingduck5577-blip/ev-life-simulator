@@ -12,7 +12,7 @@ const S = {
   pGas:170, pHome:31, pPub:60, charger:150000, mGas:40000, mEv:25000, insGas:60000, insEv:60000,
   cSum:0.9, cWin:0.7, rGas:0.85, rEv:0.9, usable:70, scen:"mid",
   seenCost:false,
-  city:"utsunomiya",          // 住んでいる市町（市町の補助金）
+  city:"",                    // 住んでいる市町（市町の補助金）。最初は未選択
   subPeriod:"2027",           // 国の補助金をどちらの登録時期で計算するか（"2027"：2027年1月以降／"dec"：12月まで）
   rivalType:"gas", gFe:"",   // gFe：燃費を書き換えたとき（空なら車種のカタログ値）         // 比べる相手：gas（ガソリン車）/ hv（ハイブリッド車）
   // ---- 今日の走り（レンタカー返却時） ----
@@ -55,12 +55,12 @@ const rivalLong = () => RIVAL_LABEL[rivalType()] || "ガソリン車";
 const gLabel = (G) => /ガソリン|ハイブリッド/.test(G.name) ? G.name : `${G.name}（${rivalShort()}）`;
 /* 「ガソリン車より安くなるのは」。総額と同じ計算（残価を差し引いた実質負担）で決める */
 const cheaperText = (r) => r.crossT === null ? "この条件では安くならない" : r.crossT <= 1.05 ? "1年目から" : `約${r.crossT.toFixed(1)}年目から`;
-/* 市町の補助金。計算に入れるのは受付中（open / soon）のときだけ */
+/* 市町の補助金。計算に入れるのは受付中（open）のときだけ（残りわずか・確認中は金額を出すが計算に入れない） */
 function localSub(E){
   const L = (window.LOCAL_SUBSIDY||[]).find(x => x.id===S.city) || null;
   if (!L) return {L:null, shown:0, counted:0};
   const shown = E && E.kei && L.amountKei ? L.amountKei : (L.amount||0);
-  return {L, shown, counted: ["open","soon"].includes(L.status) ? shown : 0};
+  return {L, shown, counted: L.status==="open" ? shown : 0};
 }
 function annualKm(){ return false ? n("monthlySpend")*12/Math.max(n("pGas"),1)*n("curFe") : n("annualKm"); }
 const doneB = () => !!(S.gasKey && S.evKey && S.seenCost);
@@ -286,10 +286,15 @@ screens.cost.update = () => {
   const maxP = Math.max(eList, gP, 1), pc = v => Math.max(0, v / maxP * 100);
   const st = subsidyStatus();
   const LBL = window.LOCAL_STATUS_LABEL || {};
-  const cityOpts = (window.LOCAL_SUBSIDY||[]).map(x => `<option value="${x.id}"${x.id===S.city?" selected":""}>${x.name}</option>`).join("");
+  const optLabel = x => x.status==="none" ? "補助なし" : x.status==="check" ? "確認中" : `${man0(x.amount)}・${LBL[x.status]||""}`;
+  const cityOpts = `<option value=""${!S.city?" selected":""}>選んでください</option>` + (window.LOCAL_SUBSIDY||[]).map(x => `<option value="${x.id}"${x.id===S.city?" selected":""}>${x.name}（${optLabel(x)}）</option>`).join("");
   const isCheck = L && L.status === "check";
   const town = L && L.name.endsWith("町") ? "町" : "市";
-  const localAmt = !L ? "―" : L.status==="none" ? "補助なし" : isCheck ? "" : LS.shown ? `<small>最大</small>−${man0(LS.shown)}` : "―";
+  const localAmt = !L ? "―" : L.status==="none" ? "補助なし" : isCheck ? "―" : LS.shown ? `<small>最大</small>−${man0(LS.shown)}` : "―";
+  const jpMD = d => { const m = String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? `${+m[1]}年${+m[2]}月${+m[3]}日` : ""; };
+  const notCounted = !L ? "" : L.status==="soon" ? "予算の残りが少ないため、計算には入れていません"
+    : L.status==="closed" ? "受付が終わっているため、計算には入れていません"
+    : isCheck && L.amount ? `参考：${man0(L.amount)}（以前の年度の金額）。今年度の金額を確認できるまで、計算には入れていません` : "";
   /* 国の補助金：登録の時期で金額が変わる（2027年1月から減額） */
   const ED = EVS[S.evKey] || {}, aDec = subDec(ED), a27 = sub2027(ED), per = subPeriod();
   const twoPeriods = !SUBSIDY.closed && !afterCut() && aDec > 0 && aDec !== a27;
@@ -301,7 +306,7 @@ screens.cost.update = () => {
     : st.state==="over" ? st.text
     : `受付終了の見込み：${SUBSIDY.endText}（予算がなくなりしだい終了）`;
   document.getElementById("p1").innerHTML = `<span class="pillpic">${pic("tag",72)}</span><div class="kick">買うとき</div>${p1title}
-    <label class="cityrow"><span>${pic("pin",22)}お住まいの市町</span><select data-k="city" aria-label="お住まいの市町">${cityOpts}</select></label>
+    <label class="cityrow"><span>${pic("pin",22)}お住まいの市町</span><select data-k="city" aria-label="お住まいの市町"${!S.city?' class="empty"':""}>${cityOpts}</select></label>
     <div class="subrows">
       <div class="subrow"><div class="sr-h"><b>国のCEV補助金</b><span class="sbadge ${SUBSIDY.closed?"closed":st.state==="near"||st.state==="now"?"soon":"open"}">${SUBSIDY.closed?"受付終了":"受付中"}</span><em class="num">${r.E.sub>0?`<small>最大</small>−${man0(r.E.sub)}`:"―"}</em></div>
         ${twoPeriods ? `<div class="subper" role="group" aria-label="車を登録する時期（押した方で計算します）">
@@ -311,11 +316,13 @@ screens.cost.update = () => {
         <div class="sr-n">1月から <b>${man0(aDec - a27)}</b> 減ります。押した方の金額で計算しています（最初は1月以降の金額）。</div>` : ""}
         <div class="sr-d">${pic("hourglass",18)}<span>${natDeadline}</span></div>
         ${SUBSIDY.closed ? "" : `<div class="sr-d">${pic("check",18)}<span>申請の最終締切：${jpDate(SUBSIDY.finalDeadline)}（登録から1か月以内に申請）</span></div>`}</div>
-      ${L ? `<div class="subrow"><div class="sr-h"><b>${L.name}の補助金</b>${isCheck ? "" : `<span class="sbadge ${L.status}">${LBL[L.status]||""}</span>`}<em class="num${LS.shown&&!LS.counted?" off":""}${!LS.shown?" na":""}">${localAmt}</em></div>
-        ${isCheck ? `<div class="sr-d">${pic("pin",18)}<span>金額や受付の状況は、${town}のページで確認できます</span></div>`
-          : `<div class="sr-d">${pic("hourglass",18)}<span>${esc(L.until)}</span></div>${L.note?`<div class="sr-n">${esc(L.note)}</div>`:""}`}
-        ${LS.shown && !LS.counted && !isCheck ? `<div class="sr-n warn">受付が終わっているため、計算には入れていません</div>` : ""}
-        ${L.url?`<a class="sr-l" href="${L.url}" target="_blank" rel="noopener">${L.name}のページを見る</a>`:""}</div>` : ""}
+      ${L ? `<div class="subrow"><div class="sr-h"><b>${L.name}の補助金</b><span class="sbadge ${L.status}">${LBL[L.status]||""}</span><em class="num${LS.shown&&!LS.counted&&!isCheck?" off":""}${!LS.shown||isCheck?" na":""}">${localAmt}</em></div>
+        ${L.status!=="none" && L.until && L.until!=="―" ? `<div class="sr-d">${pic("hourglass",18)}<span>${esc(L.until)}</span></div>` : ""}
+        ${L.note ? `<div class="sr-n">${esc(L.note)}</div>` : ""}
+        ${notCounted ? `<div class="sr-n warn">${notCounted}</div>` : ""}
+        ${L.checked ? `<div class="sr-d">${pic("check",18)}<span>${jpMD(L.checked)}に${town}のページで確認${L.pageUpdated?`（ページの更新日：${jpMD(L.pageUpdated)}）`:""}</span></div>` : ""}
+        ${L.url?`<a class="sr-l" href="${L.url}" target="_blank" rel="noopener">${L.name}のページで確かめる</a>`:""}</div>`
+      : `<div class="subrow"><div class="sr-h"><b>市町の補助金</b><em class="num na">―</em></div><div class="sr-n">上の「お住まいの市町」を選ぶと、その市町の補助金の金額と受付の状況を出します。</div></div>`}
     </div>
     <div class="bars">
       ${barRow("車両価格", man0(eList), pc(eReal), "var(--evl)", sub>0?{hatchPct:pc(sub), hatchLabel:`補助金 最大−${man0(sub)}`}:{})}
