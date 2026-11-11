@@ -6,7 +6,7 @@
    ========================================================= */
 const EVS = {
   "n-one-e":  {photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2025/09/4250911-n-one-e/4250911-n-one-e_01.jpg", kei:true, rival:"n-one", pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", range:295, name:"N-ONE e:（e:G）", cat:"軽乗用EV", price:2699400, sub:580000, sub2027:458000, wh:105, kwh:29.6, tax:10800, wt:0, qkw:50, acKw:6, ok:true},
-  "super-one":{photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2026/05/4260521-super-one/4260521-super-one_01.jpg", rival:"fit-gas", pic:"car", seats:"4人", size:"小型", use:"走りを楽しむ", range:274, name:"Super-ONE", cat:"小型EV", price:3390200, sub:1300000, sub2027:780000, wh:113, kwh:29.6, tax:25000, wt:0, qkw:50, acKw:6, ok:false},
+  "super-one":{photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2026/05/4260521-super-one/4260521-super-one_01.jpg", rival:"n-one-rs", pic:"car", seats:"4人", size:"小型", use:"走りを楽しむ", range:274, name:"Super-ONE", cat:"小型EV", price:3390200, sub:1300000, sub2027:780000, wh:113, kwh:29.6, tax:25000, wt:0, qkw:50, acKw:6, ok:false},
   "insight":  {photo:"https://global.honda/content/dam/site/global-en/newsroom-new/cq_img/news/2026/04/4260416eng-insight/4260416eng-insight_01.jpg", rival:"zrv-gas", pic:"suv", seats:"5人", size:"SUV", use:"家族で遠出", range:535, name:"INSIGHT", cat:"クロスオーバーSUV EV", price:5500000, sub:1300000, sub2027:780000, wh:134, kwh:68.8, tax:25000, wt:0, qkw:150, acKw:6, ok:true},
   "n-van-e":  {photo:"https://global.honda/content/dam/site/global-en/newsroom-new/cq_img/news/2024/06/4240613eng-n-van-e/4240613eng-n-van-e_01.jpg", kei:true, rival:"n-van", pic:"van", seats:"1〜4人（グレードによる）", size:"軽バン", use:"仕事・趣味の荷物", range:245, name:"N-VAN e:", cat:"軽商用EV", price:2600000, sub:580000, sub2027:458000, wh:126, kwh:29.6, tax:5000, wt:0, qkw:50, acKw:6, ok:false},
   "custom":   {name:"その他のEV", cat:"スペックを入力", custom:true}
@@ -18,6 +18,9 @@ const EVS = {
    比べる相手の車。type は "gas"（ガソリン車）/ "hv"（ハイブリッド車）。価格・燃費は同じクラスの目安 */
 const GASES = {
   "n-one": {photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2020/11/4201119-n-one_01.jpg", pic:"car", seats:"4人", size:"軽", use:"街乗り・通勤", name:"N-ONE", cat:"軽乗用", type:"gas", price:1800000, fe:23, tax:10800, wt:3300},
+  /* N-ONE RS：Super-ONE と同じ N-ONE の車体で、走りを楽しむ向け（ターボ・6速MT・FF）。
+     価格・燃費は Honda公式（www.honda.co.jp/N-ONE、主要諸元表）で 2026-11-11 に確認。写真は N-ONE と同じ */
+  "n-one-rs":{photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2020/11/4201119-n-one_01.jpg", pic:"car", seats:"4人", size:"軽", use:"走りを楽しむ", name:"N-ONE RS", cat:"軽乗用", type:"gas", price:2278100, fe:21.6, tax:10800, wt:3300},
   "n-box": {photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2023-new/10/4231005-n-box_og.jpg", pic:"car", seats:"4人", size:"軽（背が高い）", use:"室内が広い・子育て", name:"N-BOX", cat:"軽乗用", type:"gas", price:1800000, fe:21, tax:10800, wt:3300},
   "n-van": {photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2026/03/4260319-n-van/4260319-n-van_01.jpg", pic:"van", seats:"1〜4人（グレードによる）", size:"軽バン", use:"仕事・趣味の荷物", name:"N-VAN", cat:"軽商用", type:"gas", price:1500000, fe:18, tax:5000, wt:3300},
   "fit-gas":{photo:"https://global.honda/content/dam/site/global-jp/news-new/cq_img/2026/07/4260709-fit/4260709-fit_01.jpg", pic:"car", seats:"5人", size:"コンパクト", use:"街乗りから遠出まで", name:"フィット（ガソリン）", cat:"コンパクト", type:"gas", price:1720000, fe:20, tax:30500, wt:7500},
