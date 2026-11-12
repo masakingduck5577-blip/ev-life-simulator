@@ -200,13 +200,16 @@ screens.cost = () => {
     <section class="pillar" id="p1" aria-labelledby="p1t"></section></div>
     <section class="p3">
       <div class="pillar-kick">ガソリン車とトータルで比べると</div>
+      <div class="p3sl">
+        ${slider("annualKm","1年の走行距離",1000,30000,500,v=>`${(+v).toLocaleString("ja-JP")}km`,"1,000km","30,000km","kmVal")}
+        ${slider("years","保有する年数",1,15,1,v=>v+"年","1年","15年","yearsOut")}
+      </div>
       <section class="sumtop" id="sumtop" aria-live="polite"></section>
-      ${slider("years","保有予定年数",1,15,1,v=>v+"年","1年","15年","yearsOut")}
       <svg id="chart" viewBox="0 0 520 260" width="100%" role="img" aria-label="累計コストの推移"></svg>
       <div class="legend"><span><i class="sw g"></i><span id="lgG">ガソリン車</span></span><span><i class="sw e"></i>EV</span><span>その年に売った場合の実質負担（払った額−売った額）</span></div>
       <p class="hint" id="p3note" style="margin:0"></p>
     </section>
-    <section class="evlife" id="evlife"></section>
+    <section class="bnf" id="bnf" aria-labelledby="bnfT">${benefitsHtml()}</section>
     <button class="mapguide" data-go="map"><span class="mg-pic">${pic("map",56)}<span class="mg-plug">${pic("plug",26)}</span></span>
       <span class="mg-tx"><b>充電する場所は？ 地図でくわしく</b><span>街の充電スポットと、あなたの使い方だと何日に1回充電するかが分かります</span></span>
       <span class="mg-go">地図を見る${CHEV_R}</span></button>
@@ -273,6 +276,7 @@ screens.cost.update = () => {
     ${r.diff < 0
       ? `<div class="st-big">${r.N}年で <span class="who ev">EV</span> が<br><em class="num">約${man(-r.diff)}</em> 安い</div>`
       : `<div class="st-big bad">${r.N}年で <span class="who gas">${rv}</span> が<br><em class="num">約${man(r.diff)}</em> 安い</div>`}
+    <div class="st-month">${monthText(r)}</div>
     <div class="st-grid">
       <div><span>${pic("plug",20)} 維持費/年</span><b class="num">${runDiff>=0?"−":"+"}${man(Math.abs(runDiff))}</b></div>
       <div><span>${pic("tag",20)} 補助金</span><b class="num">${r.subTotal>0?`最大−${man0(r.subTotal)}`:"―"}</b></div>
@@ -369,6 +373,7 @@ screens.cost.update = () => {
   document.getElementById("p3note").textContent = `${r.charger?`充電器の設置費${man(r.charger)}・`:""}税・メンテナンス・保険・売るときの価値（残価）を含めた実質負担で計算。「${rv}より安くなるのは」も同じ計算です`;
   document.getElementById("resNote").textContent = `残価＝車両価格（補助金を引く前）×（1−年率）^年数。年率はガソリン車 ${DEP.gas.hi*100}/${DEP.gas.mid*100}/${DEP.gas.lo*100}%、EV ${DEP.ev.hi*100}/${DEP.ev.mid*100}/${DEP.ev.lo*100}%（高め/中間/低め）。EVは中古の値段が下がりやすい傾向を入れた目安です。`;
   document.getElementById("yearsOut").textContent = r.N+"年";
+  document.getElementById("kmVal").textContent = `${Math.round(r.km).toLocaleString("ja-JP")}km`;
 
   /* 詳しく */
   document.getElementById("tblTitle").textContent = `内訳（${r.N}年）`;
@@ -385,8 +390,16 @@ screens.cost.update = () => {
   document.getElementById("freqNote").textContent = `1回の充電で走る目安：春秋 約${Math.round(r.rangeMid)}km／冬 約${Math.round(r.rangeWin)}km。毎日の使い方に合わせて、電池の${Math.round(r.usable*100)}%を実際の電費で使う想定です。${r.E.range?`カタログの「満充電で約${r.E.range}km」は、満充電から使い切ったときのカタログ値（WLTC）です。`:""}`;
   document.getElementById("scBody").innerHTML = r.scen.map(x=>`<tr><td>${SCEN_LABEL[x.s]}${x.s===S.scen?"（選択中）":""}</td><td class="g">${yen(x.gr)}</td><td class="e">${yen(x.er)}</td><td>${sman(x.d)}</td></tr>`).join("");
   drawChart(r);
-  const ev = document.getElementById("evlife"); if (ev && typeof evLifeHtml === "function") ev.innerHTML = evLifeHtml();
+  bnfSync();
 };
+
+/* 月あたりの差：差額 ÷ 保有年数 ÷ 12 を100円単位に丸める。どちらが安くても同じ書き方・見た目 */
+function monthText(r){
+  const m = Math.round(Math.abs(r.diff) / r.N / 12 / 100) * 100;
+  if (m === 0) return "月あたりの差は、ほとんどありません";
+  return `${r.diff < 0 ? "EV" : rivalShort()}の方が月あたり<span class="nw"><b class="num">約${m.toLocaleString("ja-JP")}円</b>安い</span>`;
+}
+
 
 screens.total = () => {
   const r = doneB() ? calc() : null;

@@ -892,3 +892,39 @@ a,.lk{display:inline-flex;align-items:center;min-height:24px;padding-block:2px}
 /* お住まいの市町：ラベルの下に、横いっぱいのプルダウン（「那須塩原市（15万円・受付中）」が切れないように） */
 .cityrow{flex-direction:column;align-items:stretch;gap:8px}
 .cityrow select{width:100%;min-width:0;height:48px;border-radius:12px;background:#fff;border:1.5px solid var(--line)}
+
+/* ---------- 結果画面：距離・年数のスライダー（トータル比較のすぐ上） ---------- */
+.p3sl{display:grid;grid-template-columns:1fr;gap:12px}
+@media (min-width:720px){ .p3sl{grid-template-columns:1fr 1fr;gap:24px} }
+.p3sl .slider label{font-size:16px !important;font-weight:700}
+/* 月あたりの差（どちらが安くても同じ見た目） */
+.sumtop .st-month{font-size:16px;line-height:1.5}
+.sumtop .st-month b{font-size:20px;margin:0 2px}
+
+/* ---------- 値段だけじゃない、EVとガソリン車の違い（カルーセル） ---------- */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.bnf{display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:22px;background:var(--panel);border:1px solid var(--line)}
+.bnf:empty{display:none}
+.bnf-tabs{display:flex;flex-wrap:wrap;gap:8px}
+.bnf-chip{font-size:16px}
+.bnf-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none;border-radius:16px}
+.bnf-track::-webkit-scrollbar{display:none}
+.bnf-track:focus-visible{outline:3px solid var(--ev);outline-offset:2px}
+.bnf-card{flex:0 0 100%;scroll-snap-align:start;display:flex;flex-direction:column;gap:12px;min-width:0}
+.bnf-img{display:block;width:100%;height:auto;aspect-ratio:4/3;max-height:280px;object-fit:cover;border-radius:16px;background:var(--panel2)}
+.bnf-tx{display:flex;flex-direction:column;gap:6px;padding:0 2px}
+.bnf-tx h3{margin:0;font-size:20px;line-height:1.4;color:var(--ink)}
+.bnf-tx p{margin:0;font-size:16px;line-height:1.7;color:var(--ink)}
+.bnf-tx .bnf-note{font-size:14px;color:var(--sub);line-height:1.6}
+.bnf-rent{margin-top:6px;gap:8px;min-height:48px}
+@media (min-width:720px){
+  .bnf-card{flex-direction:row;align-items:center;gap:24px}
+  .bnf-img{width:46%;flex-shrink:0}
+}
+.bnf-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bnf-btn{display:inline-flex;align-items:center;gap:4px;min-height:44px;min-width:88px;padding:0 14px;border-radius:999px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-size:16px;font-weight:700;cursor:pointer;justify-content:center}
+.bnf-btn:disabled{border-color:var(--line);color:#8C95A3;cursor:default}
+.bnf-dots{display:flex;gap:8px;align-items:center}
+.bnf-dots i{width:10px;height:10px;border-radius:50%;background:#C3CAD4}
+.bnf-dots i.on{width:24px;border-radius:999px;background:var(--navy)}
+@media (prefers-reduced-motion:reduce){ .bnf-track{scroll-behavior:auto} }

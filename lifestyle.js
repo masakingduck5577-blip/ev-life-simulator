@@ -235,22 +235,47 @@ function tileA() {
 }
 
 /* =========================================================
-   結果画面の「値段だけじゃない、EVとガソリン車の違い」
-   場面を選んでいればその提案の上位、まだなら代表的なカードを出す
+   値段だけじゃない、EVとガソリン車の違い（カルーセル。中身は benefits.js）
+   画面を開いたときとテーマを替えたときだけ作る（スライダーを動かしても位置が戻らないように）
    ========================================================= */
-const EVLIFE_DEFAULT = ["full-every-morning", "smooth-start", "wait-ac", "power-outage"];   // 毎朝満充電・坂道や合流・アイドリングなし・災害時
-function evLifeHtml() {
-  const ok = (c) => { const q = c.requires || {}; return !(q.homeCharge === true && !S.homeCharge) && !(q.homeCharge === false && S.homeCharge); };
-  const ranked = [];
-  const list = EVLIFE_DEFAULT.map((id) => CARDS().find((c) => c.id === id)).filter((c) => c && ok(c)).slice(0, 4);
+let bnfTheme = "easy";
+function benefitsHtml(){
+  const T = window.BENEFIT_THEMES || [], all = window.BENEFITS || [];
+  if (!T.find(t => t.id === bnfTheme)) bnfTheme = T[0]?.id || "";
+  const list = all.filter(b => b.theme === bnfTheme);
   if (!list.length) return "";
-  const card = (c) => { const m = lsMetric(c);
-    return `<button type="button" class="elcard" data-act="lsOpenFrom:${esc(c.id)}"><span class="el-pic">${lsIcon(c.icon, true)}</span>
-      <span class="el-tx"><b>${esc(c.title)}</b><span>${esc(c.body)}</span>${m && m.value ? `<span class="el-m"><small>${esc(m.label)}</small><em class="num">${esc(m.value)}</em></span>` : ""}</span></button>`; };
-  return `<div class="el-head">${pic("sparkles",36)}<div><h2>値段だけじゃない、<br>EVとガソリン車の違い</h2><p>${ranked.length ? "あなたが選んだ場面に合う使い方" : "EVのある毎日で変わること"}</p></div></div>
-    <div class="el-list">${list.map(card).join("")}</div>
-    <button class="btn2" data-act="lsStart">自分に合う使い方をもっと探す</button>`;
+  const card = (b, i) => `<article class="bnf-card" aria-roledescription="スライド" aria-label="${i+1}枚目（全${list.length}枚）">
+      <img class="bnf-img" src="${b.img}" alt="${esc(b.alt||b.title)}" width="800" height="600" loading="lazy">
+      <div class="bnf-tx"><h3>${esc(b.title)}</h3><p>${esc(b.body)}</p>${b.note ? `<p class="bnf-note">${esc(b.note)}</p>` : ""}
+      ${b.rental && RENTAL.url ? `<button type="button" class="btn2 bnf-rent" data-act="rentalGo">${pic("key",22)}レンタルで確かめる</button>` : ""}</div></article>`;
+  return `<div class="el-head">${pic("sparkles",36)}<h2 id="bnfT">値段だけじゃない、<br>EVとガソリン車の違い</h2></div>
+    <div class="bnf-tabs" role="group" aria-label="テーマ">${T.map(t => `<button type="button" class="chip bnf-chip" aria-pressed="${t.id===bnfTheme}" data-act="bTheme:${t.id}">${esc(t.label)}</button>`).join("")}</div>
+    <div class="bnf-track" id="bnfTrack" role="region" aria-roledescription="カルーセル" aria-label="${esc(T.find(t=>t.id===bnfTheme).label)}" tabindex="0">${list.map(card).join("")}</div>
+    <div class="bnf-nav">
+      <button type="button" class="bnf-btn" data-act="bMove:-1">${CHEV_L}<span>前へ</span></button>
+      <span class="bnf-dots" aria-hidden="true">${list.map(() => "<i></i>").join("")}</span>
+      <span class="sr-only" id="bnfPos" aria-live="polite"></span>
+      <button type="button" class="bnf-btn" data-act="bMove:1"><span>次へ</span>${CHEV_R}</button>
+    </div>`;
 }
+/* 今何枚目か：点・ボタンの状態を合わせる */
+function bnfIndex(tr){ return tr && tr.clientWidth ? Math.round(tr.scrollLeft / tr.clientWidth) : 0; }
+function bnfSync(){
+  const box = document.getElementById("bnf"), tr = document.getElementById("bnfTrack"); if (!box || !tr) return;
+  if (!tr.dataset.bound) { tr.dataset.bound = "1"; let t; tr.addEventListener("scroll", () => { clearTimeout(t); t = setTimeout(bnfSync, 60); }, {passive:true}); }
+  const n = tr.children.length, i = Math.min(bnfIndex(tr), n - 1);
+  box.querySelectorAll(".bnf-dots i").forEach((d, k) => d.classList.toggle("on", k === i));
+  const [prev, next] = box.querySelectorAll(".bnf-btn");
+  prev.disabled = i <= 0; next.disabled = i >= n - 1;
+  const pos = document.getElementById("bnfPos"); if (pos) pos.textContent = `${i+1}枚目（全${n}枚）`;
+}
+Object.assign(ACT, {
+  bTheme(id){ bnfTheme = id; const box = document.getElementById("bnf"); if (box) { box.innerHTML = benefitsHtml(); bnfSync(); } },
+  bMove(d){ const tr = document.getElementById("bnfTrack"); if (!tr) return;
+    const n = tr.children.length, i = Math.max(0, Math.min(n - 1, bnfIndex(tr) + (+d)));
+    const smooth = !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    tr.scrollTo({left: i * tr.clientWidth, behavior: smooth ? "smooth" : "auto"}); },
+});
 
 /* ---------- 起動 ---------- */
 render(false);
