@@ -921,10 +921,20 @@ a,.lk{display:inline-flex;align-items:center;min-height:24px;padding-block:2px}
   .bnf-card{flex-direction:row;align-items:center;gap:24px}
   .bnf-img{width:46%;flex-shrink:0}
 }
-.bnf-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.bnf-btn{display:inline-flex;align-items:center;gap:4px;min-height:44px;min-width:88px;padding:0 14px;border-radius:999px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-size:16px;font-weight:700;cursor:pointer;justify-content:center}
-.bnf-btn:disabled{border-color:var(--line);color:#8C95A3;cursor:default}
 .bnf-dots{display:flex;gap:8px;align-items:center}
 .bnf-dots i{width:10px;height:10px;border-radius:50%;background:#C3CAD4}
 .bnf-dots i.on{width:24px;border-radius:999px;background:var(--navy)}
 @media (prefers-reduced-motion:reduce){ .bnf-track{scroll-behavior:auto} }
+/* 両端の矢印（○に矢印だけ。半透明で目立ちすぎないように）。画像の縦の真ん中に置く */
+.bnf-stage{position:relative;container-type:inline-size}
+.bnf-arrow{position:absolute;top:min(37.5cqw,140px);transform:translateY(-50%);width:44px;height:44px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid rgba(10,37,64,.25);background:rgba(255,255,255,.72);color:var(--navy);cursor:pointer;opacity:.85;transition:opacity .15s,background .15s;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.bnf-arrow:hover,.bnf-arrow:focus-visible{opacity:1;background:rgba(255,255,255,.92)}
+.bnf-arrow.prev{left:8px}
+.bnf-arrow.next{right:8px}
+@media (min-width:720px){
+  .bnf-arrow{top:50%}
+  .bnf-tx{padding-right:56px}
+}
+.bnf-nav{position:relative;display:flex;align-items:center;justify-content:center;min-height:44px}
+.bnf-play{position:absolute;right:0;top:50%;transform:translateY(-50%);width:44px;height:44px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--sub);cursor:pointer}
+.bnf-play:hover{color:var(--navy);border-color:var(--navy)}

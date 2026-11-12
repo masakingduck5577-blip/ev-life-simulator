@@ -236,45 +236,86 @@ function tileA() {
 
 /* =========================================================
    値段だけじゃない、EVとガソリン車の違い（カルーセル。中身は benefits.js）
-   画面を開いたときとテーマを替えたときだけ作る（スライダーを動かしても位置が戻らないように）
+   ・3テーマのカードを1列に並べる。めくると次のテーマへ進み、上のチップも切り替わる
+   ・操作しないときは3秒ごとに次へ（最後まで行ったら最初へ）。止めるボタンあり
+     マウスを乗せている間・キーボードで操作中・画面の外・別のタブのとき・「動きを減らす」設定のときは動かない
+   ・画面を開いたときだけ作る（スライダーを動かしても位置が戻らないように）
    ========================================================= */
-let bnfTheme = "easy";
+const BNF_AUTO_MS = 3000;
+const BNF_PAUSE_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+const BNF_PLAY_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>';
+const bnfReduce = () => !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+const bnf = { timer: null, last: 0, stopped: bnfReduce(), hover: false, inView: true, auto: false, io: null };
+
 function benefitsHtml(){
-  const T = window.BENEFIT_THEMES || [], all = window.BENEFITS || [];
-  if (!T.find(t => t.id === bnfTheme)) bnfTheme = T[0]?.id || "";
-  const list = all.filter(b => b.theme === bnfTheme);
-  if (!list.length) return "";
-  const card = (b, i) => `<article class="bnf-card" aria-roledescription="スライド" aria-label="${i+1}枚目（全${list.length}枚）">
+  const T = window.BENEFIT_THEMES || [], all = (window.BENEFITS || []).filter(b => T.some(t => t.id === b.theme));
+  if (!all.length) return "";
+  const label = id => T.find(t => t.id === id).label;
+  const card = b => { const list = all.filter(x => x.theme === b.theme), k = list.indexOf(b);
+    return `<article class="bnf-card" data-theme="${b.theme}" aria-roledescription="スライド" aria-label="${esc(label(b.theme))}　${k+1}枚目（全${list.length}枚）">
       <img class="bnf-img" src="${b.img}" alt="${esc(b.alt||b.title)}" width="800" height="600" loading="lazy">
       <div class="bnf-tx"><h3>${esc(b.title)}</h3><p>${esc(b.body)}</p>${b.note ? `<p class="bnf-note">${esc(b.note)}</p>` : ""}
-      ${b.rental && RENTAL.url ? `<button type="button" class="btn2 bnf-rent" data-act="rentalGo">${pic("key",22)}レンタルで確かめる</button>` : ""}</div></article>`;
+      ${b.rental && RENTAL.url ? `<button type="button" class="btn2 bnf-rent" data-act="rentalGo">${pic("key",22)}レンタルで確かめる</button>` : ""}</div></article>`; };
   return `<div class="el-head">${pic("sparkles",36)}<h2 id="bnfT">値段だけじゃない、<br>EVとガソリン車の違い</h2></div>
-    <div class="bnf-tabs" role="group" aria-label="テーマ">${T.map(t => `<button type="button" class="chip bnf-chip" aria-pressed="${t.id===bnfTheme}" data-act="bTheme:${t.id}">${esc(t.label)}</button>`).join("")}</div>
-    <div class="bnf-track" id="bnfTrack" role="region" aria-roledescription="カルーセル" aria-label="${esc(T.find(t=>t.id===bnfTheme).label)}" tabindex="0">${list.map(card).join("")}</div>
+    <div class="bnf-tabs" role="group" aria-label="テーマ">${T.map((t,i) => `<button type="button" class="chip bnf-chip" aria-pressed="${i===0}" data-act="bTheme:${t.id}">${esc(t.label)}</button>`).join("")}</div>
+    <div class="bnf-stage">
+      <div class="bnf-track" id="bnfTrack" role="region" aria-roledescription="カルーセル" aria-label="値段だけじゃない、EVとガソリン車の違い" tabindex="0">${all.map(card).join("")}</div>
+      <button type="button" class="bnf-arrow prev" data-act="bMove:-1" aria-label="前へ">${CHEV_L}</button>
+      <button type="button" class="bnf-arrow next" data-act="bMove:1" aria-label="次へ">${CHEV_R}</button>
+    </div>
     <div class="bnf-nav">
-      <button type="button" class="bnf-btn" data-act="bMove:-1">${CHEV_L}<span>前へ</span></button>
-      <span class="bnf-dots" aria-hidden="true">${list.map(() => "<i></i>").join("")}</span>
+      <span class="bnf-dots" aria-hidden="true"></span>
+      <button type="button" class="bnf-play" data-act="bPlay"></button>
       <span class="sr-only" id="bnfPos" aria-live="polite"></span>
-      <button type="button" class="bnf-btn" data-act="bMove:1"><span>次へ</span>${CHEV_R}</button>
     </div>`;
 }
-/* 今何枚目か：点・ボタンの状態を合わせる */
-function bnfIndex(tr){ return tr && tr.clientWidth ? Math.round(tr.scrollLeft / tr.clientWidth) : 0; }
+function bnfIndex(tr){ return tr && tr.clientWidth ? Math.min(tr.children.length - 1, Math.round(tr.scrollLeft / tr.clientWidth)) : 0; }
+/* i枚目へ（端を越えたら反対の端へ） */
+function bnfGo(i, auto){
+  const tr = document.getElementById("bnfTrack"); if (!tr) return;
+  const n = tr.children.length, cur = bnfIndex(tr), j = (i % n + n) % n;
+  const jump = Math.abs(j - cur) > 1 || bnfReduce();
+  bnf.auto = !!auto; bnf.last = Date.now();
+  tr.scrollTo({left: j * tr.clientWidth, behavior: jump ? "auto" : "smooth"});
+}
+/* 今のカードに、チップ・点・読み上げを合わせる */
 function bnfSync(){
   const box = document.getElementById("bnf"), tr = document.getElementById("bnfTrack"); if (!box || !tr) return;
-  if (!tr.dataset.bound) { tr.dataset.bound = "1"; let t; tr.addEventListener("scroll", () => { clearTimeout(t); t = setTimeout(bnfSync, 60); }, {passive:true}); }
-  const n = tr.children.length, i = Math.min(bnfIndex(tr), n - 1);
-  box.querySelectorAll(".bnf-dots i").forEach((d, k) => d.classList.toggle("on", k === i));
-  const [prev, next] = box.querySelectorAll(".bnf-btn");
-  prev.disabled = i <= 0; next.disabled = i >= n - 1;
-  const pos = document.getElementById("bnfPos"); if (pos) pos.textContent = `${i+1}枚目（全${n}枚）`;
+  if (!tr.dataset.bound) bnfBind(box, tr);
+  const cards = [...tr.children], c = cards[bnfIndex(tr)]; if (!c) return;
+  const th = c.dataset.theme, same = cards.filter(x => x.dataset.theme === th), k = same.indexOf(c);
+  box.querySelectorAll(".bnf-chip").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.act === "bTheme:" + th)));
+  const dots = box.querySelector(".bnf-dots");
+  if (dots.dataset.theme !== th || dots.children.length !== same.length) { dots.dataset.theme = th; dots.innerHTML = same.map(() => "<i></i>").join(""); }
+  [...dots.children].forEach((d, x) => d.classList.toggle("on", x === k));
+  const play = box.querySelector(".bnf-play");
+  play.innerHTML = bnf.stopped ? BNF_PLAY_SVG : BNF_PAUSE_SVG;
+  play.setAttribute("aria-label", bnf.stopped ? "自動でめくるのを再開" : "自動でめくるのを止める");
+  if (!bnf.auto) { const pos = document.getElementById("bnfPos"); if (pos) pos.textContent = c.getAttribute("aria-label"); }
+}
+function bnfBind(box, tr){
+  tr.dataset.bound = "1";
+  let t; tr.addEventListener("scroll", () => { clearTimeout(t); t = setTimeout(bnfSync, 60); }, {passive:true});
+  const touch = () => { bnf.last = Date.now(); bnf.auto = false; };
+  ["pointerdown", "wheel", "keydown", "touchstart"].forEach(e => box.addEventListener(e, touch, {passive:true}));
+  box.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") bnf.hover = true; });
+  box.addEventListener("pointerleave", () => { bnf.hover = false; bnf.last = Date.now(); });
+  bnf.io?.disconnect();
+  if (window.IntersectionObserver) { bnf.io = new IntersectionObserver(es => { bnf.inView = es[0].isIntersecting; }, {threshold: 0.5}); bnf.io.observe(tr); }
+  bnf.last = Date.now();
+  clearInterval(bnf.timer);
+  bnf.timer = setInterval(() => {
+    const tr2 = document.getElementById("bnfTrack");
+    if (!tr2) { clearInterval(bnf.timer); bnf.timer = null; bnf.io?.disconnect(); return; }   // 別の画面に移った
+    const kbd = tr2.closest(".bnf").querySelector(":focus-visible");
+    if (bnf.stopped || bnf.hover || kbd || document.hidden || !bnf.inView || Date.now() - bnf.last < BNF_AUTO_MS) return;
+    bnfGo(bnfIndex(tr2) + 1, true);
+  }, 200);
 }
 Object.assign(ACT, {
-  bTheme(id){ bnfTheme = id; const box = document.getElementById("bnf"); if (box) { box.innerHTML = benefitsHtml(); bnfSync(); } },
-  bMove(d){ const tr = document.getElementById("bnfTrack"); if (!tr) return;
-    const n = tr.children.length, i = Math.max(0, Math.min(n - 1, bnfIndex(tr) + (+d)));
-    const smooth = !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    tr.scrollTo({left: i * tr.clientWidth, behavior: smooth ? "smooth" : "auto"}); },
+  bTheme(id){ const tr = document.getElementById("bnfTrack"); if (!tr) return; const i = [...tr.children].findIndex(c => c.dataset.theme === id); if (i >= 0) bnfGo(i); },
+  bMove(d){ const tr = document.getElementById("bnfTrack"); if (tr) bnfGo(bnfIndex(tr) + (+d)); },
+  bPlay(){ bnf.stopped = !bnf.stopped; bnf.last = Date.now(); bnf.auto = false; bnfSync(); },
 });
 
 /* ---------- 起動 ---------- */
