@@ -8,7 +8,7 @@ window.SUBSIDY_AUTO = {
     "endFrom": "2026-12-01",
     "endTo": "2026-12-31",
     "noticeDate": "2026-09-04",
-    "amountAsOf": "2026-11-06"
+    "amountAsOf": "2026-11-13"
   },
   "amounts": {
     "n-one-e": 580000,
@@ -27,6 +27,6 @@ window.SUBSIDY_AUTO = {
     "notice": "https://www.cev-pc.or.jp/notice/pdf/20260904_R7ho-cev_oshirase.pdf",
     "table": "https://www.cev-pc.or.jp/hojo/pdf/R7ho/R7ho_meigaragotojougen_3.pdf"
   },
-  "updatedAt": "2026-11-08",
-  "checkedAt": "2026-11-08"
+  "updatedAt": "2026-11-14",
+  "checkedAt": "2026-11-14"
 };
