@@ -3,7 +3,7 @@
    読み込めないときや中身が null のときは cars.js の値を使う。 */
 window.SUBSIDY_AUTO = {
   "subsidy": {
-    "closed": false,
+    "closed": true,
     "endText": "2026年12月上旬〜下旬",
     "endFrom": "2026-12-01",
     "endTo": "2026-12-31",
@@ -27,6 +27,6 @@ window.SUBSIDY_AUTO = {
     "notice": "https://www.cev-pc.or.jp/notice/pdf/20260904_R7ho-cev_oshirase.pdf",
     "table": "https://www.cev-pc.or.jp/hojo/pdf/R7ho/R7ho_meigaragotojougen_3.pdf"
   },
-  "updatedAt": "2026-11-20",
-  "checkedAt": "2026-11-20"
+  "updatedAt": "2026-11-21",
+  "checkedAt": "2026-11-21"
 };
