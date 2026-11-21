@@ -254,7 +254,7 @@ function benefitsHtml(){
   const card = b => { const list = all.filter(x => x.theme === b.theme), k = list.indexOf(b);
     return `<article class="bnf-card" data-theme="${b.theme}" aria-roledescription="スライド" aria-label="${esc(label(b.theme))}　${k+1}枚目（全${list.length}枚）">
       <img class="bnf-img" src="${b.img}" alt="${esc(b.alt||b.title)}" width="800" height="600" loading="lazy">
-      <div class="bnf-tx"><h3>${esc(b.title)}</h3><p>${esc(b.body)}</p>${b.note ? `<p class="bnf-note">${esc(b.note)}</p>` : ""}
+      <div class="bnf-tx"><h3>${esc(b.title)}</h3><p>${esc(b.body)}</p>
       ${b.rental && RENTAL.url ? `<button type="button" class="btn2 bnf-rent" data-act="rentalGo">${pic("key",22)}レンタルで確かめる</button>` : ""}</div></article>`; };
   return `<div class="el-head">${pic("sparkles",36)}<h2 id="bnfT">値段だけじゃない、<br>EVとガソリン車の違い</h2></div>
     <div class="bnf-tabs" role="group" aria-label="テーマ">${T.map((t,i) => `<button type="button" class="chip bnf-chip" aria-pressed="${i===0}" data-act="bTheme:${t.id}">${esc(t.label)}</button>`).join("")}</div>

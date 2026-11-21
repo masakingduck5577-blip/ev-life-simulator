@@ -68,6 +68,20 @@ const SUBSIDY = {
   applyRule: "新車登録（届出）から1か月以内に申請",
   url: "https://www.cev-pc.or.jp/hojo/cev.html",
 };
+/* 国の補助金の次回の制度（いまの制度が受付終了のときに、結果画面に出す）
+   ・発表がないあいだ … status:"unannounced"（画面に「未発表」）。checked を確かめた日にする
+   ・公式発表があったら … status:"announced" にして、name・period・amounts（車ごとの金額・円）・source を
+     センターの発表どおりに書く。確かめていない金額は書かない
+   2026-11-21：令和7年度補正は 2026年11月20日到着分で受付終了。次回の発表はセンターのページに見当たらない */
+const NEXT_SUBSIDY = {
+  status: "unannounced",
+  checked: "2026-11-21",
+  url: "https://www.cev-pc.or.jp/hojo/cev.html",
+  name: "",          // 例："国のCEV補助金（令和8年度）"
+  period: "",        // 例："2027年4月1日以降の登録"
+  amounts: {},       // 例：{ "n-one-e": 0 }
+  source: "",        // 発表のPDFなど
+};
 const jpDate = (iso) => { const [y, m, d] = iso.split("-").map(Number); return `${y}年${m}月${d}日`; };
 const subsidyNote = () => SUBSIDY.closed
   ? `${SUBSIDY.name}は受付を終了しています（自動確認：${jpDate(SUBSIDY.checkedAt || SUBSIDY.amountAsOf)}）。自治体の補助は別途確認。`

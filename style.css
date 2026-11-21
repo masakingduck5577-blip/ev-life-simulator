@@ -938,3 +938,42 @@ a,.lk{display:inline-flex;align-items:center;min-height:24px;padding-block:2px}
 .bnf-nav{position:relative;display:flex;align-items:center;justify-content:center;min-height:44px}
 .bnf-play{position:absolute;right:0;top:50%;transform:translateY(-50%);width:44px;height:44px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--sub);cursor:pointer}
 .bnf-play:hover{color:var(--navy);border-color:var(--navy)}
+
+/* ---------- 最初の画面のイラスト ---------- */
+.homeart{display:block;width:100%;height:auto;aspect-ratio:800/420;border-radius:20px;margin-bottom:8px;background:#DCE6F2}
+
+/* ---------- 乗るとき：年間の維持費（1行目＝ラベル、2行目＝金額と「安い」をひと続きに） ---------- */
+.pillar .ttl.rcttl{display:flex;flex-direction:column;gap:2px;font-family:'Zen Kaku Gothic New','Noto Sans JP',sans-serif}
+.rcttl .rc-l1{font-size:20px;font-weight:700;color:var(--ink);line-height:1.4}
+.rcttl .rc-l2{display:flex;align-items:baseline;flex-wrap:nowrap;gap:4px;white-space:nowrap;font-size:24px;font-weight:700;color:var(--ink);line-height:1.15}
+.rcttl .rc-l2 em{font-family:inherit;font-style:normal;font-weight:700;color:#1F6FEB;font-size:40px;letter-spacing:-.01em}
+@media (min-width:960px){ .rcttl .rc-l1{font-size:22px} .rcttl .rc-l2{font-size:28px} .app[data-wide] .rcttl .rc-l2 em{font-size:48px} }
+
+/* ---------- 100円で走れる距離：2本の道路の長さ・スタート位置・縮尺をそろえる ---------- */
+.roads{display:grid;grid-template-columns:92px minmax(0,1fr) 128px;gap:10px 10px;align-items:center}
+.roads .road{display:contents}
+.roads .rd-v{min-width:0}
+.roads .rd-track{border-left:3px solid #8C95A3;border-radius:0 8px 8px 0}
+.roads .rd-fill{border-radius:0 8px 8px 0;min-width:40px}
+.rd-ratio{margin:0;font-size:16px;font-weight:700;color:var(--ink)}
+@media (min-width:960px){ .roads{grid-template-columns:120px minmax(0,1fr) 150px} }
+
+/* ---------- 買うとき：補助金の状態 ---------- */
+.sbadge.unset{background:#E6E9EE;color:#4A5563}
+.subrow.nx{gap:8px}
+.nx-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:10px 12px;border-radius:12px;background:var(--panel2)}
+.nx-row span{font-size:14px;font-weight:700;color:var(--sub);flex-basis:100%}
+.nx-row b{font-size:22px;color:var(--ink)}
+.nx-row small{font-size:14px;color:var(--sub)}
+.nx-row.assume{background:var(--warn-t);border:1px dashed var(--warn)}
+.nx-row.assume span{color:var(--warn)}
+.nx-in{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:700;color:var(--sub)}
+.nx-in input{height:44px;max-width:200px;padding:0 12px;border-radius:10px;border:1.5px solid var(--line);font-size:16px;background:#fff;color:var(--ink)}
+/* スマホ：名前と数字を上、道路を下に横いっぱい（2本とも同じ長さ） */
+@media (max-width:599px){
+  .roads{display:flex;flex-direction:column;align-items:stretch;gap:14px}
+  .roads .road{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"l v" "t t";gap:4px 8px;align-items:end}
+  .roads .rd-l{grid-area:l;align-self:center}
+  .roads .rd-v{grid-area:v}
+  .roads .rd-track{grid-area:t}
+}

@@ -13,6 +13,7 @@ const S = {
   cSum:0.9, cWin:0.7, rGas:0.85, rEv:0.9, usable:70, scen:"mid",
   seenCost:false,
   city:"",                    // 住んでいる市町（市町の補助金）。最初は未選択
+  subAssume:"",               // 次回の国の補助金を仮定して比べる額（万円）。空なら出さない（仮定の試算）
   subPeriod:"2027",           // 国の補助金をどちらの登録時期で計算するか（"2027"：2027年1月以降／"dec"：12月まで）
   rivalType:"gas", gFe:"",   // gFe：燃費を書き換えたとき（空なら車種のカタログ値）         // 比べる相手：gas（ガソリン車）/ hv（ハイブリッド車）
   // ---- 今日の走り（レンタカー返却時） ----
@@ -145,7 +146,7 @@ const spec = items => `<dl class="spec">${items.map(([t,v])=>`<div><dt>${t}</dt>
 const screens = {};
 
 screens.home = () => header("EV Life Simulator",null,"ホーム") + `<main class="main home1">
-    <div class="hero"><div class="herorow" aria-hidden="true">${pic("house",72)}${pic("plug",56)}${pic("car",96)}</div>
+    <div class="hero"><img class="homeart" src="img/home.svg" width="800" height="420" alt="ガソリンスタンドで給油するガソリン車と、家で充電するEVを見比べるイラスト">
       <h1>EVに買い替えたら、<br>お金はどう変わる？</h1>
       <p>今の車とEVを比べて、<b>補助金</b>と<b>燃料代</b>でいくら変わるかを計算します。</p></div>
     <button class="startcard" data-go="ev" aria-label="シミュレーションを始める（約3分・補助金と燃料代を計算）"><span class="sc-tx"><span class="k">約3分</span><span class="t">シミュレーションを始める</span><span class="sc-chips"><span>${pic("tag",22)}補助金</span><span>${pic("fuel",22)}燃料代</span></span></span><span class="sc-pic" aria-hidden="true">${pic("yen",76)}</span></button>
@@ -305,7 +306,7 @@ screens.cost.update = () => {
   const p1title = sub > 0
     ? `<h2 class="ttl" id="p1t">補助金で<br><span class="nw">最大</span> <em class="num">${man0(sub)}</em> <span class="nw">安く買える</span></h2>
        ${twoPeriods ? `<p class="p1sub">${per==="2027" ? `12月までに登録できれば <b class="num">最大${man0(aDec + LS.counted)}</b>` : `1月以降の登録だと <b class="num">最大${man0(a27 + LS.counted)}</b>`}</p>` : ""}`
-    : `<h2 class="ttl" id="p1t">いま使える補助金は<br><em style="font-size:28px">見つかりません</em></h2>`;
+    : p1NoSub(L, LS);
   const natDeadline = SUBSIDY.closed ? st.text
     : st.state==="over" ? st.text
     : `受付終了の見込み：${SUBSIDY.endText}（予算がなくなりしだい終了）`;
@@ -326,7 +327,8 @@ screens.cost.update = () => {
         ${notCounted ? `<div class="sr-n warn">${notCounted}</div>` : ""}
         ${L.checked ? `<div class="sr-d">${pic("check",18)}<span>${jpMD(L.checked)}に${town}のページで確認${L.pageUpdated?`（ページの更新日：${jpMD(L.pageUpdated)}）`:""}</span></div>` : ""}
         ${L.url?`<a class="sr-l" href="${L.url}" target="_blank" rel="noopener">${L.name}のページで確かめる</a>`:""}</div>`
-      : `<div class="subrow"><div class="sr-h"><b>市町の補助金</b><em class="num na">―</em></div><div class="sr-n">上の「お住まいの市町」を選ぶと、その市町の補助金の金額と受付の状況を出します。</div></div>`}
+      : `<div class="subrow"><div class="sr-h"><b>市町の補助金</b><span class="sbadge unset">未選択</span><em class="num na">―</em></div><div class="sr-n">上の「お住まいの市町」を選ぶと、その市町の補助金の金額と受付の状況を出します。</div></div>`}
+      ${nextSubsidyHtml(r, LS)}
     </div>
     <div class="bars">
       ${barRow("車両価格", man0(eList), pc(eReal), "var(--evl)", sub>0?{hatchPct:pc(sub), hatchLabel:`補助金 最大−${man0(sub)}`}:{})}
@@ -345,12 +347,14 @@ screens.cost.update = () => {
   const stack = (parts, main) => `<span class="stk">${parts.map((v,k)=>`<i style="width:${v/maxM*100}%;background:${k===0?main:RC[k][1]}"></i>`).join("")}</span>`;
   const yen1000 = v => `${(Math.round(Math.abs(v)/1000)*1000).toLocaleString("ja-JP")}円`;
   const diffRow = (label, k, note) => { const d = gParts[k]-eParts[k]; return `<div class="rcd"><span>${label}</span><b class="num">${Math.abs(d)<500?"ほぼ同じ":`年 ${d>0?"−":"+"}${yen1000(d)}`}</b>${note?`<small>${note}</small>`:""}</div>`; };
+  /* 2本の道路は、長さ・スタート位置・縮尺をそろえる（長い方の距離＝道路の右端）。走った部分の色と車の位置で差を見せる */
   const kmax = Math.max(r.k100g, r.k100a, 1);
   const road = (cls, img, label, v) => `<div class="road ${cls}"><div class="rd-l">${pic(img,26)}<span>${label}</span></div>
-      <div class="rd-track"><span class="rd-fill" style="width:${v/kmax*100}%"><span class="rd-car">${pic("car",34)}</span></span></div>
+      <div class="rd-track" role="img" aria-label="${label}：100円で${v.toFixed(1)}km"><span class="rd-fill" style="width:${Math.max(v/kmax*100, 4)}%"><span class="rd-car">${pic("car",34)}</span></span></div>
       <div class="rd-v"><b class="num">${v.toFixed(1)}</b><span>km</span></div></div>`;
+  const ratio = Math.max(r.k100g, r.k100a) / Math.max(Math.min(r.k100g, r.k100a), 0.1);
   document.getElementById("p2").innerHTML = `<span class="pillpic">${pic("plug",64)}</span><div class="kick">乗るとき</div>
-    <h2 class="ttl" id="p2t">${dM >= 0 ? `ランニングコストが<br>年 <em class="num">約${man(dM)}</em> <span class="nw">安い</span>` : `ランニングコストが<br>年 約${man(-dM)} 高い`}</h2>
+    <h2 class="ttl rcttl" id="p2t"><span class="rc-l1">年間の維持費</span><span class="rc-l2"><em class="num">約${man(Math.abs(dM))}</em>${dM >= 0 ? "安い" : "高い"}</span></h2>
     <div class="bars">
       <div class="br"><span class="lb">${pic("fuel",26)}<span>${rv}</span></span>${stack(gParts,"var(--ev)")}<span class="v num" style="color:var(--gas)">年${man(gM)}</span></div>
       <div class="br big"><span class="lb" style="color:var(--ev);font-weight:700">${pic("plug",26)}<span>EV</span></span>${stack(eParts,"var(--ev)")}<span class="v num">年${man(eM)}</span></div>
@@ -364,8 +368,11 @@ screens.cost.update = () => {
     </div>
     <div class="k100hero">
       <h2 class="k100h">${pic("coin",34)}100円で走れる距離</h2>
-      ${road("g","fuel",rv,r.k100g)}
-      ${road("e","plug","EV",r.k100a)}
+      <div class="roads">
+        ${road("g","fuel",rv,r.k100g)}
+        ${road("e","plug","EV",r.k100a)}
+      </div>
+      ${ratio >= 1.05 ? `<p class="rd-ratio">${r.k100a >= r.k100g ? "EV" : rv}の方が、約${ratio.toFixed(1)}倍の距離を走れます</p>` : ""}
     </div>
     <p class="note">※ 年${km.toLocaleString("ja-JP")}km・${S.homeCharge?`自宅で充電${Math.round(n("homeShare"))}%`:"外で充電"}・ガソリン${n("pGas")}円/Lで計算。燃費・電費は実際に走るときの目安${r.drive?"（電費は今日の走りから）":""}、メンテ・保険も目安です。くわしくは下の「内訳と条件」</p>`;
 
@@ -392,6 +399,37 @@ screens.cost.update = () => {
   drawChart(r);
   bnfSync();
 };
+
+/* 使える補助金が0円のときの見出し。「市町が未選択」「対象の補助がないと確認済み」「情報が未確認」を分ける */
+function p1NoSub(L, LS){
+  const h = (t, sub) => `<h2 class="ttl" id="p1t">${t}</h2>${sub ? `<p class="p1sub">${sub}</p>` : ""}`;
+  const nat = SUBSIDY.closed ? "国の補助金は受付が終わっています。" : "";
+  if (!L) return h(`お住まいの市町を<br>教えてください`, `${nat}市町によっては、EVを買うときの補助金があります。下で選んでください。`);
+  if (L.status === "check") return h(`${esc(L.name)}の補助金は<br>確認中です`, `今年度の内容をまだ確認できていないため、計算には入れていません。${nat}`);
+  if (L.status === "soon") return h(`${esc(L.name)}の補助金は<br>残りわずかです`, `受付が終わるおそれがあるため、計算には入れていません。${nat}`);
+  if (L.status === "none") return h(`いま使える補助金は<br>ありません`, `${nat}${esc(L.name)}には、EVを買うときの補助がないことを確認しています。`);
+  if (L.status === "closed") return h(`いま使える補助金は<br>ありません`, `${nat}${esc(L.name)}の補助金も受付が終わっています。`);
+  return h(`いま使える補助金は<br>ありません`, nat);
+}
+
+/* 国の補助金の次回の制度。いまの制度が受付終了のときに出す。
+   公式発表があれば、その金額で「次回の対象条件を満たす場合」の価格を、いまの価格とは別に出す。
+   発表がなければ「未発表」。仮の補助額を入れたときは「仮定の試算」として分けて出す */
+function nextSubsidyHtml(r, LS){
+  if (!SUBSIDY.closed) return "";
+  const X = NEXT_SUBSIDY, now = r.ePrice - r.subTotal;
+  const official = X.status === "announced" ? (X.amounts?.[S.evKey] || 0) : 0;
+  const assume = Math.max(0, Math.round(n("subAssume") * 10000));
+  const priceRow = (label, amount, cls) => `<div class="nx-row ${cls}"><span>${label}</span><b class="num">約${man0(now - amount)}</b><small>補助金 −${man0(amount)}／いまの実質価格は約${man0(now)}</small></div>`;
+  return `<div class="subrow nx"><div class="sr-h"><b>次回の国の補助金</b><span class="sbadge ${X.status === "announced" ? "open" : "check"}">${X.status === "announced" ? "公式発表あり" : "未発表"}</span></div>
+    ${X.status === "announced"
+      ? `<div class="sr-n">${esc(X.name)}：${esc(X.period)}${official ? "" : "。この車の金額は発表に見当たりません"}</div>
+         ${official ? priceRow("次回の対象条件を満たす場合の実質価格", official, "off") : ""}`
+      : `<div class="sr-n">次回の実施や金額は、まだ公式に発表されていません（${jpDate(X.checked)}に確認）。発表があれば、ここに対象の時期・金額を出します。</div>`}
+    <label class="nx-in">仮の補助額で比べる（万円）<input type="number" inputmode="numeric" min="0" step="1" data-chg="subAssume" value="${esc(String(S.subAssume ?? ""))}"></label>
+    ${assume > 0 ? priceRow("仮定の試算（確定した価格ではありません）", assume, "assume") : ""}
+    <a class="sr-l" href="${X.url}" target="_blank" rel="noopener">次世代自動車振興センターで確かめる</a></div>`;
+}
 
 /* 月あたりの差：差額 ÷ 保有年数 ÷ 12 を100円単位に丸める。どちらが安くても同じ書き方・見た目 */
 function monthText(r){

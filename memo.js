@@ -227,6 +227,7 @@ Object.assign(ACT, {
   setKm(v) { S.annualKm = +v; S.kmMode = "direct"; render(true); },
   memoAsk(id) { S.memoAsks = { ...S.memoAsks, [id]: !S.memoAsks[id] }; render(true); },
   subPer(v) { S.subPeriod = v === "dec" ? "dec" : "2027"; render(true); },
+  subAssume(_, el) { S.subAssume = el.value; screens[current].update?.(); },   // 仮の補助額（入力が終わったときに計算し直す）
   subToMemo() { const r = calc(); memoInitAsks(r); S.memoAsks = { ...S.memoAsks, subsidy: true }; go("memo"); },
   async memoCopy() {
     const u = shareUrl();

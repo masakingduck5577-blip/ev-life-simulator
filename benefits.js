@@ -5,7 +5,8 @@
    theme  : BENEFIT_THEMES の id
    img    : img/benefits/ のイラスト（文字は画像に入れず、ここに書く）
    alt    : イラストの説明（画面を読み上げる人のため）
-   title  : 見出し / body : 説明（1〜2文） / note : 添える一言（小さい文字。なければ ""）
+   title  : 見出し / body : 説明（1〜2文）。画面に出すのはこの2つ
+   note   : 条件や補足のメモ（画面には出さない。2026-11-21 に表示をやめた。数字の条件の記録として残す）
    rental : true なら「レンタルで確かめる」ボタンを付ける（cars.js の RENTAL.url）
    ========================================================= */
 window.BENEFIT_THEMES = [
@@ -38,7 +39,7 @@ window.BENEFITS = [
     title: "静か", body: "エンジンの音や振動がない。会話や音楽が聞きやすい。",
     note: "レンタルで確かめられる", rental: true,
     sources: [], checked: "2026-11-11" },
-  { id: "2-2", theme: "feature", img: "img/benefits/2-2.svg", alt: "坂道をなめらかに上るEVのイラスト",
+  { id: "2-2", theme: "feature", img: "img/benefits/2-2.svg", alt: "信号が青になり、なめらかに発進するEVのイラスト",
     title: "なめらかな加速", body: "踏んだ瞬間から力が出る。坂道や合流が楽。",
     note: "N-ONE e: はアクセルだけで加速・減速・停止ができる（シングルペダル）", rental: true,
     sources: [SRC_N_ONE_E], checked: "2026-11-11" },
